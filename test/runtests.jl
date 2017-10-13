@@ -14,7 +14,6 @@ ip = invperm(p)
 
 t = (p...)
 
-
 i = rand(1:n)
 
 @test @inferred(TupleTools.tail2(t)) == t[3:n]
