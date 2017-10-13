@@ -2,8 +2,21 @@ module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
 
-# don't export anything, import whatever you need
+"""
+    struct StaticLength{N} end
 
+Like `Val{N}`, `StaticLength` can be used to construct a tuple of inferrable length
+using `ntuple(f, StaticLength(N))`. Here, `StaticLength(N)` creates `StaticLength{N}()`
+using a `Base.@pure` constructor. Furthermore, one can add and subtract `StaticLength`
+objects, such that
+```
+StaticLength(N₁) + StaticLength(N₂) == StaticLength(N₁+N₂)
+```
+and
+```
+StaticLength(N₁) - StaticLength(N₂) == StaticLength(max(0, N₁-N₂))
+```
+"""
 struct StaticLength{N}
 end
 Base.@pure StaticLength(N::Int) = StaticLength{N}()
@@ -22,6 +35,7 @@ if VERSION >= v"0.7-" # to fix type instability in (f)indmin / (f)indmax
 end
 
 @inline argtail2(a, b, c...) = c
+
 """
     tail2(t::Tuple) -> ::Tuple
 
@@ -86,12 +100,56 @@ look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. S
 @inline _insertat(t::Tuple, i::Int, t2::Tuple) = i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
 @inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
 
-@inline function sortperm(t::Tuple)
-    i = indmin(t)
-    r = map(n->(n < i ? n : n+1), sortperm(deleteat(t, i)))
-    return (i, r...)
+
+"""
+    sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
+
+Sorts the tuple `t`.
+"""
+@inline function sort(t::Tuple; lt=isless, by=identity, rev::Bool=false)
+    i = 1
+    if rev
+        for k = 2:length(t)
+            if lt(by(t[i]), by(t[k]))
+                i = k
+            end
+        end
+    else
+        for k = 2:length(t)
+            if lt(by(t[k]), by(t[i]))
+                i = k
+            end
+        end
+    end
+    return (t[i], sort(deleteat(t, i); lt = lt, by = by, rev = rev)...)
 end
-@inline sortperm(t::Tuple{Any}) = (1,)
+@inline sort(t::Tuple{Any}; lt=isless, by=identity, rev::Bool=false) = t
+
+"""
+    sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
+
+
+Computes a tuple that contains the permutation required to sort `t`.
+"""
+@inline function sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false)
+    i::Int = 1
+    if rev
+        for k = 2:length(t)
+            if lt(by(t[i]), by(t[k]))
+                i = k
+            end
+        end
+    else
+        for k = 2:length(t)
+            if lt(by(t[k]), by(t[i]))
+                i = k
+            end
+        end
+    end
+    r = sortperm(deleteat(t, i); lt = lt, by = by, rev = rev)
+    return (i, map(n->(n < i ? n : n+1), r)...)
+end
+@inline sortperm(t::Tuple{Any}; lt=isless, by=identity, rev::Bool=false) = (1,)
 
 """
     getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple
@@ -109,6 +167,11 @@ Permute the elements of tuple `t` according to the permutation in `p`.
 permute(t::NTuple{N}, p::NTuple{N,Int}) where {N} = isperm(p) ? getindices(t, p) : throw(ArgumentError("not a valid permutation: $p"))
 permute(t::NTuple{N}, p) where {N} = isperm(p) && length(p) == N ? ntuple(n->t[p[n]], StaticLength(N)) : throw(ArgumentError("not a valid permutation: $p"))
 
+"""
+    invperm(p::NTuple{N,Int}) -> ::NTuple{N,Int}
+
+Inverse permutation of a permutation `p`.
+"""
 invperm(p::Tuple{Vararg{Int}}) = sortperm(p)
 
 end # module

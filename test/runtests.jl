@@ -23,12 +23,13 @@ i = rand(1:n)
 @test @inferred(TupleTools.unsafe_tail(())) == ()
 @test @inferred(TupleTools.unsafe_front(())) == ()
 
+@test @inferred(TupleTools.getindices(t, (1,2,3))) == t[1:3]
 @test @inferred(TupleTools.vcat((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
 
 @test @inferred(TupleTools.deleteat(t, i)) == (deleteat!(copy(p), i)...)
 @test @inferred(TupleTools.insertat(t, i, (1,2,3))) == (vcat(p[1:i-1], [1,2,3], p[i+1:n])...)
 
-@test @inferred(TupleTools.getindices(t, (1,2,3))) == t[1:3]
-
+@test @inferred(TupleTools.sort(t; rev = true)) == (sort(p; rev = true)...)
 @test @inferred(TupleTools.sortperm(t)) == (sortperm(p)...)
 @test @inferred(TupleTools.invperm(t)) == (ip...)
+@test @inferred(TupleTools.permute(t, t)) == (p[p]...)
