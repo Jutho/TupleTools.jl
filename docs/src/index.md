@@ -1,10 +1,8 @@
 # TupleTools.jl
 
-[![Build Status](https://travis-ci.org/Jutho/TupleTools.jl.svg?branch=master)](https://travis-ci.org/jutho/TupleTools.jl)
-
-[![Coverage Status](https://coveralls.io/repos/Jutho/TupleTools.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/jutho/TupleTools.jl?branch=master)
-
-[![codecov.io](http://codecov.io/github/Jutho/TupleTools.jl/coverage.svg?branch=master)](http://codecov.io/github/jutho/TupleTools.jl?branch=master)
+[![Build Status](https://travis-ci.org/Jutho/TupleTools.jl.svg?branch=master)](https://travis-ci.org/Jutho/TupleTools.jl)
+[![Coverage Status](https://coveralls.io/repos/Jutho/TupleTools.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/Jutho/TupleTools.jl?branch=master)
+[![codecov.io](http://codecov.io/github/Jutho/TupleTools.jl/coverage.svg?branch=master)](http://codecov.io/github/Jutho/TupleTools.jl?branch=master)
 
 A bunch of tools for using tuples (mostly homogeneous tuples `NTuple{N}`) as a collection
 and performing a number of operations with an inferrable result, typically also an `NTuple{M}`
