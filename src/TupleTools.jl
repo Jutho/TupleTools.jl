@@ -30,8 +30,7 @@ else
 end
 
 if VERSION >= v"0.7-" # to fix type instability in (f)indmin / (f)indmax
-    Base.Pair(p::Tuple{Any,Any}) = p[1] => p[2]
-    Base.pairs(collection) = Base.Generator(=>, zip(keys(collection), values(collection)))
+    Base.pairs(collection) = (k=>v for (k,v) in zip(keys(collection), values(collection)))
 end
 
 @inline argtail2(a, b, c...) = c
@@ -82,11 +81,19 @@ not expanded.
 Delete the element at location `i` in `t`; if a list `I` of indices is specified
 (again as a tuple), the elements of these different positions are deleted.
 """
-@inline deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
-@inline deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}}) = deleteat(deleteat(t, I[1]), map(i->(i<I[1] ? i : i-1), tail(I)))
-@inline deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
+deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
+function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
+    any(i->(1 <= i <= length(t)), I) && throw(BoundsError(t, I))
+    _deleteat(_deleteat(t, I[1]), ishift(tail(I), I[1], -1))
+end
+deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 @inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
 @inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
+
+@inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
+@inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) = _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
+
+ishift(t::Tuple{Vararg{Int}}, i::Int, s::Int) = map(n->(n < i ? n : n+s), t)
 
 """
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
@@ -99,7 +106,6 @@ look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. S
 @inline insertat(t::Tuple, i::Int, t2::Tuple) = 1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
 @inline _insertat(t::Tuple, i::Int, t2::Tuple) = i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
 @inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
-
 
 """
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
@@ -121,7 +127,7 @@ Sorts the tuple `t`.
             end
         end
     end
-    return (t[i], sort(deleteat(t, i); lt = lt, by = by, rev = rev)...)
+    return (t[i], sort(_deleteat(t, i); lt = lt, by = by, rev = rev)...)
 end
 @inline sort(t::Tuple{Any}; lt=isless, by=identity, rev::Bool=false) = t
 
@@ -131,7 +137,8 @@ end
 
 Computes a tuple that contains the permutation required to sort `t`.
 """
-@inline function sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false)
+sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
+@inline function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     i::Int = 1
     if rev
         for k = 2:length(t)
@@ -146,10 +153,10 @@ Computes a tuple that contains the permutation required to sort `t`.
             end
         end
     end
-    r = sortperm(deleteat(t, i); lt = lt, by = by, rev = rev)
-    return (i, map(n->(n < i ? n : n+1), r)...)
+    r = _sortperm(_deleteat(t, i), lt, by, rev)
+    return (i, ishift(r, i, +1)...)
 end
-@inline sortperm(t::Tuple{Any}; lt=isless, by=identity, rev::Bool=false) = (1,)
+@inline _sortperm(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = (1,)
 
 """
     getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple
@@ -164,8 +171,8 @@ Get the indices `t[i] for i in I`, again as tuple.
 
 Permute the elements of tuple `t` according to the permutation in `p`.
 """
-permute(t::NTuple{N}, p::NTuple{N,Int}) where {N} = isperm(p) ? getindices(t, p) : throw(ArgumentError("not a valid permutation: $p"))
-permute(t::NTuple{N}, p) where {N} = isperm(p) && length(p) == N ? ntuple(n->t[p[n]], StaticLength(N)) : throw(ArgumentError("not a valid permutation: $p"))
+@inline permute(t::NTuple{N}, p::NTuple{N,Int}) where {N} = isperm(p) ? getindices(t, p) : throw(ArgumentError("not a valid permutation: $p"))
+@inline permute(t::NTuple{N}, p) where {N} = isperm(p) && length(p) == N ? ntuple(n->t[p[n]], StaticLength(N)) : throw(ArgumentError("not a valid permutation: $p"))
 
 """
     invperm(p::NTuple{N,Int}) -> ::NTuple{N,Int}
