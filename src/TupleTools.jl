@@ -150,6 +150,15 @@ minimal elements, then the first one will be returned.
 """
 indmin(t::Tuple) = findmin(t)[2]
 
+
+"""
+    indmax(t::Tuple)
+
+Returns the index of the maximum element in a tuple. If there are multiple
+minimal elements, then the first one will be returned.
+"""
+indmax(t::Tuple) = findmax(t)[2]
+
 """
     findmin(t::Tuple)
 
@@ -173,8 +182,6 @@ end
 Returns the value and index of the maximum element in a tuple. If there are multiple
 maximal elements, then the first one will be returned.
 """
-indmax(t::Tuple) = findmax(t)[2]
-
 findmax(::Tuple{Any}) = 1
 findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
 @inline _findmax(t::Tuple{}, s, v, i) = (v, i)

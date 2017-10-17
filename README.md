@@ -4,13 +4,10 @@
 # TupleTools.jl
 
 
-[![Build Status](https://travis-ci.org/Jutho/TupleTools.jl.svg?branch=master)](https://travis-ci.org/Jutho/TupleTools.jl)
-[![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
-[![Coverage Status](https://coveralls.io/repos/Jutho/TupleTools.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/Jutho/TupleTools.jl?branch=master)
-[![codecov.io](http://codecov.io/github/Jutho/TupleTools.jl/coverage.svg?branch=master)](http://codecov.io/github/Jutho/TupleTools.jl?branch=master)
+[![Build Status](https://travis-ci.org/Jutho/TupleTools.jl.svg?branch=master)](https://travis-ci.org/Jutho/TupleTools.jl) [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md) [![Coverage Status](https://coveralls.io/repos/Jutho/TupleTools.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/Jutho/TupleTools.jl?branch=master) [![codecov.io](http://codecov.io/github/Jutho/TupleTools.jl/coverage.svg?branch=master)](http://codecov.io/github/Jutho/TupleTools.jl?branch=master)
 
 
-A bunch of tools for using tuples (mostly homogeneous tuples `NTuple{N}`) as a collection and performing a number of operations with an inferrable result, typically also an `NTuple{M}` with inferrable length `M`. Type inference breaks down if some of the final or intermediate tuples exceed `MAX_TUPLETYPE_LEN`, meaning inference typically works up to output tuples of length `13` or `14`. Inference also breaks down for most methods in case of inhomogeneous tuples.
+A bunch of tools for using tuples (mostly homogeneous tuples `NTuple{N}`) as a collection and performing a number of operations with an inferrable result, typically also an `NTuple{M}` with inferrable length `M`. Type inference breaks down if some of the final or intermediate tuples exceed `MAX_TUPLETYPE_LEN`, meaning inference typically works up to output tuples of length `13` or `14`. Chosen implementations are typically faster than the corresponding functions in base for those small tuple lengths, but can be slower for larger tuples. Inference also breaks down for most functions in case of inhomogeneous tuples.
 
 
 <a id='Types-1'></a>
@@ -87,17 +84,6 @@ getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple
 
 Get the indices `t[i] for i in I`, again as tuple.
 
-<a id='TupleTools.vcat' href='#TupleTools.vcat'>#</a>
-**`TupleTools.vcat`** &mdash; *Function*.
-
-
-
-```
-vcat(args...) -> ::Tuple
-```
-
-Like `vcat` for tuples, concatenates a combination of tuple arguments and non-tuple arguments into a single tuple. Only works one level deep, i.e. tuples in tuples are not expanded.
-
 <a id='TupleTools.deleteat' href='#TupleTools.deleteat'>#</a>
 **`TupleTools.deleteat`** &mdash; *Function*.
 
@@ -119,7 +105,50 @@ Delete the element at location `i` in `t`; if a list `I` of indices is specified
 insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
 ```
 
-Insert the elements of tuple t2 at location `i` in `t`, i.e. the output tuple will look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. See `splice` if you would also like to return `t[i]`
+Insert the elements of tuple t2 at location `i` in `t`, i.e. the output tuple will look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. Use `setindex` for setting a single value at position `i`.
+
+<a id='TupleTools.vcat' href='#TupleTools.vcat'>#</a>
+**`TupleTools.vcat`** &mdash; *Function*.
+
+
+
+```
+vcat(args...) -> ::Tuple
+```
+
+Like `vcat` for tuples, concatenates a combination of tuple arguments and non-tuple arguments into a single tuple. Only works one level deep, i.e. tuples in tuples are not expanded.
+
+<a id='TupleTools.sum' href='#TupleTools.sum'>#</a>
+**`TupleTools.sum`** &mdash; *Function*.
+
+
+
+```
+sum(t::Tuple)
+```
+
+Returns the sum of the element of a tuple, or `0` for an empty tuple.
+
+<a id='TupleTools.prod' href='#TupleTools.prod'>#</a>
+**`TupleTools.prod`** &mdash; *Function*.
+
+
+
+```
+prod(t::Tuple)
+```
+
+Returns the product of the elements of a tuple, or `1` for an empty tuple.
+
+
+```
+TupleTools.minimum
+TupleTools.maximum
+TupleTools.findmin
+TupleTools.findmax
+TupleTools.indmin
+TupleTools.indmax
+```
 
 <a id='TupleTools.sort' href='#TupleTools.sort'>#</a>
 **`TupleTools.sort`** &mdash; *Function*.
