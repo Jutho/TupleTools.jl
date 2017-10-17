@@ -10,6 +10,9 @@
 A bunch of tools for using tuples (mostly homogeneous tuples `NTuple{N}`) as a collection and performing a number of operations with an inferrable result, typically also an `NTuple{M}` with inferrable length `M`. Type inference breaks down if some of the final or intermediate tuples exceed `MAX_TUPLETYPE_LEN`, meaning inference typically works up to output tuples of length `13` or `14`. Chosen implementations are typically faster than the corresponding functions in base for those small tuple lengths, but can be slower for larger tuples. Inference also breaks down for most functions in case of inhomogeneous tuples.
 
 
+Note that none of the following functions are exported, since their name often collides with the equivalent from `Base`.
+
+
 <a id='Types-1'></a>
 
 ## Types
@@ -140,15 +143,71 @@ prod(t::Tuple)
 
 Returns the product of the elements of a tuple, or `1` for an empty tuple.
 
+<a id='TupleTools.minimum' href='#TupleTools.minimum'>#</a>
+**`TupleTools.minimum`** &mdash; *Function*.
+
+
 
 ```
-TupleTools.minimum
-TupleTools.maximum
-TupleTools.findmin
-TupleTools.findmax
-TupleTools.indmin
-TupleTools.indmax
+minimum(t::Tuple)
 ```
+
+Returns the smallest element of a tuple
+
+<a id='TupleTools.maximum' href='#TupleTools.maximum'>#</a>
+**`TupleTools.maximum`** &mdash; *Function*.
+
+
+
+```
+maximum(t::Tuple)
+```
+
+Returns the largest element of a tuple
+
+<a id='TupleTools.findmin' href='#TupleTools.findmin'>#</a>
+**`TupleTools.findmin`** &mdash; *Function*.
+
+
+
+```
+findmin(t::Tuple)
+```
+
+Returns the value and index of the minimum element in a tuple. If there are multiple minimal elements, then the first one will be returned.
+
+<a id='TupleTools.findmax' href='#TupleTools.findmax'>#</a>
+**`TupleTools.findmax`** &mdash; *Function*.
+
+
+
+```
+findmax(t::Tuple)
+```
+
+Returns the value and index of the maximum element in a tuple. If there are multiple maximal elements, then the first one will be returned.
+
+<a id='TupleTools.indmin' href='#TupleTools.indmin'>#</a>
+**`TupleTools.indmin`** &mdash; *Function*.
+
+
+
+```
+indmin(t::Tuple)
+```
+
+Returns the index of the minimum element in a tuple. If there are multiple minimal elements, then the first one will be returned.
+
+<a id='TupleTools.indmax' href='#TupleTools.indmax'>#</a>
+**`TupleTools.indmax`** &mdash; *Function*.
+
+
+
+```
+indmax(t::Tuple)
+```
+
+Returns the index of the maximum element in a tuple. If there are multiple minimal elements, then the first one will be returned.
 
 <a id='TupleTools.sort' href='#TupleTools.sort'>#</a>
 **`TupleTools.sort`** &mdash; *Function*.
