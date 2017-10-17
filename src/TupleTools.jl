@@ -100,19 +100,83 @@ ishift(t::Tuple{Vararg{Int}}, i::Int, s::Int) = map(n->(n < i ? n : n+s), t)
 
 
 Insert the elements of tuple t2 at location `i` in `t`, i.e. the output tuple will
-look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. See
-`splice` if you would also like to return `t[i]`
+look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. Use
+`setindex` for setting a single value at position `i`.
 """
 @inline insertat(t::Tuple, i::Int, t2::Tuple) = 1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
 @inline _insertat(t::Tuple, i::Int, t2::Tuple) = i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
 @inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
 
 """
+    minimum(t::Tuple)
+
+Returns the smallest element of a tuple
+"""
+@inline minimum(t::Tuple{Any}) = t[1]
+@inline minimum(t::Tuple) = min(t[1], minimum(tail(t)))
+
+"""
+    maximum(t::Tuple)
+
+Returns the largest element of a tuple
+"""
+@inline maximum(t::Tuple{Any}) = t[1]
+@inline maximum(t::Tuple) = max(t[1], maximum(tail(t)))
+
+
+"""
+    indmin(t::Tuple)
+
+Returns the index of the minimum element in a tuple. If there are multiple
+minimal elements, then the first one will be returned.
+"""
+indmin(t::Tuple) = findmin(t)[2]
+
+"""
+    findmin(t::Tuple)
+
+Returns the value and index of the minimum element in a tuple. If there are multiple
+minimal elements, then the first one will be returned.
+"""
+findmin(t::Tuple{Any}) = (t[1], 1)
+findmin(t::Tuple) = _findmin(tail(t),2,t[1],1)
+@inline _findmin(t::Tuple{}, s, v, i) = (v, i)
+@inline function _findmin(t::Tuple, s, v, i)
+    if t[1] < v
+        _findmin(tail(t), s+1, t[1], s)
+    else
+        _findmin(tail(t), s+1, v, i)
+    end
+end
+
+"""
+    findmax(t::Tuple)
+
+Returns the value and index of the maximum element in a tuple. If there are multiple
+maximal elements, then the first one will be returned.
+"""
+indmax(t::Tuple) = findmax(t)[2]
+
+findmax(::Tuple{Any}) = 1
+findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
+@inline _findmax(t::Tuple{}, s, v, i) = (v, i)
+@inline function _findmax(t::Tuple, s, v, i)
+    if t[1] > v
+        _findmax(tail(t), s+1, t[1], s)
+    else
+        _findmax(tail(t), s+1, v, i)
+    end
+end
+
+
+
+"""
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
 
 Sorts the tuple `t`.
 """
-@inline function sort(t::Tuple; lt=isless, by=identity, rev::Bool=false)
+sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+@inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     i = 1
     if rev
         for k = 2:length(t)
@@ -127,9 +191,9 @@ Sorts the tuple `t`.
             end
         end
     end
-    return (t[i], sort(_deleteat(t, i); lt = lt, by = by, rev = rev)...)
+    return (t[i], _sort(_deleteat(t, i), lt, by, rev)...)
 end
-@inline sort(t::Tuple{Any}; lt=isless, by=identity, rev::Bool=false) = t
+@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
