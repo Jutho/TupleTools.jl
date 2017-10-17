@@ -108,6 +108,24 @@ look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. U
 @inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
 
 """
+    sum(t::Tuple)
+
+Returns the sum of the element of a tuple, or `0` for an empty tuple.
+"""
+@inline sum(t::Tuple{}) = 0
+@inline sum(t::Tuple{Any}) = t[1]
+@inline sum(t::Tuple) = t[1]+sum(tail(t))
+
+"""
+    prod(t::Tuple)
+
+Returns the product of the elements of a tuple, or `1` for an empty tuple.
+"""
+@inline prod(t::Tuple{}) = 1
+@inline prod(t::Tuple{Any}) = t[1]
+@inline prod(t::Tuple) = t[1]*prod(tail(t))
+
+"""
     minimum(t::Tuple)
 
 Returns the smallest element of a tuple
