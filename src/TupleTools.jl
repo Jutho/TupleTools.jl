@@ -1,6 +1,7 @@
 module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
+import Base: permute # TODO: this can disappear when Sparse moves out of Base
 
 """
     struct StaticLength{N} end
@@ -27,10 +28,6 @@ if VERSION < v"0.7.0-DEV.843"
     @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N})
 else
     @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N}())
-end
-
-if VERSION >= v"0.7-" # to fix type instability in (f)indmin / (f)indmax
-    Base.pairs(collection) = (k=>v for (k,v) in zip(keys(collection), values(collection)))
 end
 
 @inline argtail2(a, b, c...) = c
