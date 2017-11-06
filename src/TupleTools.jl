@@ -2,7 +2,7 @@ __precompile__(true)
 module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
-import Base: permute # TODO: this can disappear when Sparse moves out of Base
+# import Base: permute # TODO: this can disappear when Sparse moves out of Base
 
 """
     struct StaticLength{N} end
@@ -258,8 +258,8 @@ Get the indices `t[i] for i in I`, again as tuple.
 
 Permute the elements of tuple `t` according to the permutation in `p`.
 """
-@inline permute(t::NTuple{N}, p::NTuple{N,Int}) where {N} = isperm(p) ? getindices(t, p) : throw(ArgumentError("not a valid permutation: $p"))
-@inline permute(t::NTuple{N}, p) where {N} = isperm(p) && length(p) == N ? ntuple(n->t[p[n]], StaticLength(N)) : throw(ArgumentError("not a valid permutation: $p"))
+@inline permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = isperm(p) ? getindices(t, p) : throw(ArgumentError("not a valid permutation: $p"))
+@inline permute(t::NTuple{N,Any}, p) where {N} = isperm(p) && length(p) == N ? ntuple(n->t[p[n]], StaticLength(N)) : throw(ArgumentError("not a valid permutation: $p"))
 
 """
     invperm(p::NTuple{N,Int}) -> ::NTuple{N,Int}
