@@ -225,6 +225,7 @@ end
 Computes a tuple that contains the permutation required to sort `t`.
 """
 sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
+_sortperm(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
 @inline function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     i::Int = 1
     if rev
