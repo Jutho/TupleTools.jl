@@ -259,8 +259,11 @@ Get the indices `t[i] for i in I`, again as tuple.
 
 Permute the elements of tuple `t` according to the permutation in `p`.
 """
-@inline permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = isperm(p) ? getindices(t, p) : throw(ArgumentError("not a valid permutation: $p"))
-@inline permute(t::NTuple{N,Any}, p) where {N} = isperm(p) && length(p) == N ? ntuple(n->t[p[n]], StaticLength(N)) : throw(ArgumentError("not a valid permutation: $p"))
+@inline permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = isperm(p) ? _permute(t, p) : throw(ArgumentError("not a valid permutation: $p"))
+@inline permute(t::NTuple{N,Any}, p) where {N} = isperm(p) && length(p) == N ? _permute(t,p) : throw(ArgumentError("not a valid permutation: $p"))
+
+@inline _permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = getindices(t, p)
+@inline _permute(t::NTuple{N,Any}, p) where {N} = ntuple(n->t[p[n]], StaticLength(N))
 
 """
     invperm(p::NTuple{N,Int}) -> ::NTuple{N,Int}
