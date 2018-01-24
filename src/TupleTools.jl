@@ -266,6 +266,22 @@ Permute the elements of tuple `t` according to the permutation in `p`.
 @inline _permute(t::NTuple{N,Any}, p) where {N} = ntuple(n->t[p[n]], StaticLength(N))
 
 """
+    isperm(p) -> ::Bool
+
+A non-allocating alternative to Base.isperm(p) that is much faster for small permutations.
+"""
+function isperm(p)
+    N = length(p)
+    @inbounds for i = 1:N
+        1 <= p[i] <= N || return false
+        for j = i+1:N
+            p[i] == p[j] && return false
+        end
+    end
+    return true
+end
+
+"""
     invperm(p::NTuple{N,Int}) -> ::NTuple{N,Int}
 
 Inverse permutation of a permutation `p`.
