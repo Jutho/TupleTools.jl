@@ -141,21 +141,21 @@ Returns the largest element of a tuple
 
 
 """
-    indmin(t::Tuple)
+    argmin(t::Tuple)
 
 Returns the index of the minimum element in a tuple. If there are multiple
 minimal elements, then the first one will be returned.
 """
-indmin(t::Tuple) = findmin(t)[2]
+argmin(t::Tuple) = findmin(t)[2]
 
 
 """
-    indmax(t::Tuple)
+    argmax(t::Tuple)
 
 Returns the index of the maximum element in a tuple. If there are multiple
 minimal elements, then the first one will be returned.
 """
-indmax(t::Tuple) = findmax(t)[2]
+argmax(t::Tuple) = findmax(t)[2]
 
 """
     findmin(t::Tuple)

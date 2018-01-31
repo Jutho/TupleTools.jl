@@ -1,6 +1,13 @@
 if VERSION < v"0.7.0-DEV.2005"
     const Test = Base.Test
 end
+if VERSION >= v"0.7.0-DEV.3406"
+    using Random
+end
+if VERSION < v"0.7.0-DEV.3516"
+    const argmin = Base.indmin
+    const argmax = Base.indmax
+end
 
 using Test
 using TupleTools
@@ -35,10 +42,12 @@ i = rand(1:n)
 @test @inferred(TupleTools.findmax(t)) == findmax(t)
 @test @inferred(TupleTools.minimum(t)) == minimum(t)
 @test @inferred(TupleTools.maximum(t)) == maximum(t)
-@test @inferred(TupleTools.indmin(t)) == indmin(t)
-@test @inferred(TupleTools.indmax(t)) == indmax(t)
+@test @inferred(TupleTools.argmin(t)) == argmin(t)
+@test @inferred(TupleTools.argmax(t)) == argmax(t)
 
 @test @inferred(TupleTools.sort(t; rev = true)) == (sort(p; rev = true)...,)
 @test @inferred(TupleTools.sortperm(t)) == (sortperm(p)...,)
 @test @inferred(TupleTools.invperm(t)) == (ip...,)
+@test @inferred(TupleTools.isperm(t)) == true
+@test @inferred(TupleTools.isperm((1,2,1))) == false
 @test @inferred(TupleTools.permute(t, t)) == (p[p]...,)
