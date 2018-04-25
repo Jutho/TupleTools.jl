@@ -36,7 +36,9 @@ i = rand(1:n)
 @test @inferred(TupleTools.vcat((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
 
 @test @inferred(TupleTools.sum(t)) == sum(t)
+@test @inferred(TupleTools.cumsum(t)) == (cumsum(p)...,)
 @test @inferred(TupleTools.prod(t)) == prod(t)
+@test @inferred(TupleTools.cumprod(t)) == (cumprod(p)...,)
 
 @test @inferred(TupleTools.findmin(t)) == findmin(t)
 @test @inferred(TupleTools.findmax(t)) == findmax(t)
