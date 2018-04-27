@@ -40,7 +40,9 @@ TupleTools.vcat
 ```
 ```@docs
 TupleTools.sum
+TupleTools.cumsum
 TupleTools.prod
+TupleTools.cumprod
 ```
 
 ```@docs

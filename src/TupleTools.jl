@@ -3,6 +3,7 @@ module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
 # import Base: permute # TODO: this can disappear when Sparse moves out of Base
+import Base: cumsum, cumprod
 
 """
     struct StaticLength{N} end
@@ -115,6 +116,18 @@ Returns the sum of the element of a tuple, or `0` for an empty tuple.
 @inline sum(t::Tuple) = t[1]+sum(tail(t))
 
 """
+    cumsum(t::Tuple)
+
+Returns the cumulative sum of the elements of a tuple, or `()` for an empty tuple.
+"""
+function cumsum(t::Tuple)
+    t_1, t_tail = first(t), tail(t)
+    return (t_1,cumsum((t_1+first(t_tail),tail(t_tail)...))...)
+end
+cumsum(t::Tuple{Any}) = t
+cumsum(t::Tuple{}) = t
+
+"""
     prod(t::Tuple)
 
 Returns the product of the elements of a tuple, or `1` for an empty tuple.
@@ -122,6 +135,18 @@ Returns the product of the elements of a tuple, or `1` for an empty tuple.
 @inline prod(t::Tuple{}) = 1
 @inline prod(t::Tuple{Any}) = t[1]
 @inline prod(t::Tuple) = t[1]*prod(tail(t))
+
+"""
+    cumprod(t::Tuple)
+
+Returns the cumulative product of the elements of a tuple, or `()` for an empty tuple.
+"""
+function cumprod(t::Tuple)
+    t_1, t_tail = first(t), tail(t)
+    return (t_1,cumprod((t_1*first(t_tail),tail(t_tail)...))...)
+end
+cumprod(t::Tuple{Any}) = t
+cumprod(t::Tuple{}) = t
 
 """
     minimum(t::Tuple)
