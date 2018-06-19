@@ -98,13 +98,26 @@ ishift(t::Tuple{Vararg{Int}}, i::Int, s::Int) = map(n->(n < i ? n : n+s), t)
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
 
 
-Insert the elements of tuple t2 at location `i` in `t`, i.e. the output tuple will
+Insert the elements of tuple `t2` at location `i` in `t`, i.e. the output tuple will
 look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. Use
-`setindex` for setting a single value at position `i`.
+`setindex` for setting a single value at position `i`, or `insertafter(t, i, t2)` to
+insert the contents of `t2` in between element `i` and `i+1` in `t`.
 """
 @inline insertat(t::Tuple, i::Int, t2::Tuple) = 1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
 @inline _insertat(t::Tuple, i::Int, t2::Tuple) = i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
 @inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
+
+"""
+    insertafter(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
+
+
+Insert the elements of tuple `t2` after location `i` in `t`, i.e. the output tuple will
+look as (t[1:i]..., t2..., t[i+1:end]). Use index `i=0` or just `(t2..., t...)` to insert
+`t2` in front of `t`; also see `insertat` to overwrite the element at position `i`.
+"""
+@inline insertafter(t::Tuple, i::Int, t2::Tuple) = 0 <= i <= length(t) ? _insertafter(t, i, t2) : throw(BoundsError(t, i))
+@inline _insertafter(t::Tuple, i::Int, t2::Tuple) = i == 0 ? (t2..., t...) : (t[1], _insertafter(tail(t), i-1, t2)...)
+@inline _insertafter(t::Tuple{}, i::Int, t2::Tuple) = i == 0 ? t2 : throw(BoundsError(t, i))
 
 """
     sum(t::Tuple)
@@ -223,7 +236,7 @@ end
 
 Sorts the tuple `t`.
 """
-sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+@inline sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
 @inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     i = 1
     if rev
@@ -242,6 +255,7 @@ sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
     return (t[i], _sort(_deleteat(t, i), lt, by, rev)...)
 end
 @inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
+@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
@@ -249,8 +263,7 @@ end
 
 Computes a tuple that contains the permutation required to sort `t`.
 """
-sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
-_sortperm(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
+@inline sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
 @inline function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     i::Int = 1
     if rev
@@ -270,6 +283,7 @@ _sortperm(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
     return (i, ishift(r, i, +1)...)
 end
 @inline _sortperm(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = (1,)
+@inline _sortperm(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
 
 """
     getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple

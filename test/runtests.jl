@@ -21,8 +21,6 @@ ip = invperm(p)
 
 t = (p...,)
 
-i = rand(1:n)
-
 @test @inferred(TupleTools.tail2(t)) == t[3:n]
 @test @inferred(TupleTools.unsafe_tail(t)) == t[2:n]
 @test @inferred(TupleTools.unsafe_front(t)) == t[1:n-1]
@@ -31,8 +29,13 @@ i = rand(1:n)
 
 @test @inferred(TupleTools.getindices(t, (1,2,3))) == t[1:3]
 
-@test @inferred(TupleTools.deleteat(t, i)) == (deleteat!(copy(p), i)...,)
-@test @inferred(TupleTools.insertat(t, i, (1,2,3))) == (vcat(p[1:i-1], [1,2,3], p[i+1:n])...,)
+for i = 1:n
+    @test @inferred(TupleTools.deleteat(t, i)) == (deleteat!(copy(p), i)...,)
+    @test @inferred(TupleTools.insertat(t, i, (1,2,3))) == (vcat(p[1:i-1], [1,2,3], p[i+1:n])...,)
+end
+for i = 0:n
+    @test @inferred(TupleTools.insertafter(t, i, (1,2,3))) == (vcat(p[1:i], [1,2,3], p[i+1:n])...,)
+end
 @test @inferred(TupleTools.vcat((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
 
 @test @inferred(TupleTools.sum(t)) == sum(t)
