@@ -33,6 +33,7 @@ for i = 1:n
     @test @inferred(TupleTools.deleteat(t, i)) == (deleteat!(copy(p), i)...,)
     @test @inferred(TupleTools.insertat(t, i, (1,2,3))) == (vcat(p[1:i-1], [1,2,3], p[i+1:n])...,)
 end
+@test @inferred(TupleTools.deleteat((1,2,3,4,5,6), (3,1,5))) == (2,4,6)
 for i = 0:n
     @test @inferred(TupleTools.insertafter(t, i, (1,2,3))) == (vcat(p[1:i], [1,2,3], p[i+1:n])...,)
 end

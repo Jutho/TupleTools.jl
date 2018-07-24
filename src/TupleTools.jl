@@ -82,8 +82,8 @@ Delete the element at location `i` in `t`; if a list `I` of indices is specified
 """
 deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
 function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
-    any(i->(1 <= i <= length(t)), I) && throw(BoundsError(t, I))
-    _deleteat(_deleteat(t, I[1]), ishift(tail(I), I[1], -1))
+    any(i->!(1 <= i <= length(t)), I) && throw(BoundsError(t, I))
+    _deleteat(t, sort(I, rev = true))
 end
 deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 @inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
@@ -91,8 +91,6 @@ deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(Bound
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
 @inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) = _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
-
-ishift(t::Tuple{Vararg{Int}}, i::Int, s::Int) = map(n->(n < i ? n : n+s), t)
 
 """
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
@@ -280,10 +278,12 @@ Computes a tuple that contains the permutation required to sort `t`.
         end
     end
     r = _sortperm(_deleteat(t, i), lt, by, rev)
-    return (i, ishift(r, i, +1)...)
+    return (i, _ishift(r, i, +1)...)
 end
 @inline _sortperm(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = (1,)
 @inline _sortperm(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
+
+_ishift(t::Tuple{Vararg{Int}}, i::Int, s::Int) = map(n->(n < i ? n : n+s), t)
 
 """
     getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple
