@@ -1,15 +1,4 @@
-if VERSION < v"0.7.0-DEV.2005"
-    const Test = Base.Test
-end
-if VERSION >= v"0.7.0-DEV.3406"
-    using Random
-end
-if VERSION < v"0.7.0-DEV.3516"
-    const argmin = Base.indmin
-    const argmax = Base.indmax
-end
-
-using Test
+using Random, Test
 using TupleTools
 
 using Base: tail, front

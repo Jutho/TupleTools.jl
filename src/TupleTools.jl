@@ -1,4 +1,3 @@
-__precompile__(true)
 module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
@@ -26,12 +25,7 @@ Base.@pure StaticLength(N::Int) = StaticLength{N}()
 Base.@pure Base.:+(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂} = StaticLength(N₁+N₂)
 Base.@pure Base.:-(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂} = StaticLength(max(0,N₁-N₂))
 
-if VERSION < v"0.7.0-DEV.843"
-    @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N})
-else
-    @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N}())
-end
-
+@inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N}())
 @inline argtail2(a, b, c...) = c
 
 """
