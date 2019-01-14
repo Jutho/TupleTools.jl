@@ -324,13 +324,8 @@ Inverse permutation of a permutation `p`.
 """
 invperm(p::Tuple{Vararg{Int}}) = sortperm(p)
 
-
-@generated function diff(v::NTuple{N, T}) where {N, T}
-    ex = Expr(:tuple)
-    for k in 1:N-1
-        push!(ex.args, :(v[$k] - v[$(k+1)]))
-    end
-    return ex
-end
+diff(v::Tuple{}) = () # similar to diff([])
+diff(v::Tuple{Any}) = ()
+diff(v::Tuple) = (v[2]-v[1], diff(Base.tail(v))...)
 
 end # module
