@@ -324,6 +324,11 @@ Inverse permutation of a permutation `p`.
 """
 invperm(p::Tuple{Vararg{Int}}) = sortperm(p)
 
+"""
+    diff(v::Tuple) -> Tuple
+
+Finite difference operator of tuple `v`.
+"""
 diff(v::Tuple{}) = () # similar to diff([])
 diff(v::Tuple{Any}) = ()
 diff(v::Tuple) = (v[2]-v[1], diff(Base.tail(v))...)
