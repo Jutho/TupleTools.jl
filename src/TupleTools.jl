@@ -84,10 +84,10 @@ function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
 end
 deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 @inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
+@inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
 @inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) = _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
-@inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
 
 """
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
@@ -213,7 +213,7 @@ end
 Returns the value and index of the maximum element in a tuple. If there are multiple
 maximal elements, then the first one will be returned.
 """
-findmax(::Tuple{Any}) = (t[1], 1)
+findmax(t::Tuple{Any}) = (t[1], 1)
 findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
 @inline _findmax(t::Tuple{}, s, v, i) = (v, i)
 @inline function _findmax(t::Tuple, s, v, i)
@@ -249,8 +249,8 @@ Sorts the tuple `t`.
     end
     return (t[i], _sort(_deleteat(t, i), lt, by, rev)...)
 end
-@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = (t, )
-@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
+@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
+@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
