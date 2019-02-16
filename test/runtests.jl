@@ -18,7 +18,7 @@ t = (p...,)
 @test @inferred(TupleTools.unsafe_front(())) == ()
 @test @inferred(TupleTools.vcat()) == ()
 @test @inferred(TupleTools.vcat((1, 2))) == (1, 2)
-@test @inferred(TupleTools.getindices(t, ())) = ()
+@test @inferred(TupleTools.getindices(t, ())) == ()
 @test @inferred(TupleTools.getindices(t, (1,2,3))) == t[1:3]
 
 @test @inferred(TupleTools.deleteat((1, 2), (1, ))) == (2, )

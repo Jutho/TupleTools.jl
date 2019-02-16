@@ -87,6 +87,7 @@ deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(Bound
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
 @inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) = _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
+@inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
 
 """
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
