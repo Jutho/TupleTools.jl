@@ -84,7 +84,6 @@ function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
 end
 deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 @inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
-@inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
 @inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) = _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
@@ -249,8 +248,8 @@ Sorts the tuple `t`.
     end
     return (t[i], _sort(_deleteat(t, i), lt, by, rev)...)
 end
-@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
-@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
+@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = (t, )
+@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
