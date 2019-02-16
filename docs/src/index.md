@@ -56,4 +56,5 @@ TupleTools.sortperm
 TupleTools.isperm
 TupleTools.invperm
 TupleTools.permute
+TupleTools.diff
 ```
