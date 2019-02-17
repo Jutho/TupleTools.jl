@@ -229,28 +229,41 @@ end
 """
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
 
-Sorts the tuple `t`.
+Sorts the tuple `t` using merge sort.
 """
-@inline sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
-@inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
-    i = 1
-    if rev
-        for k = 2:length(t)
-            if lt(by(t[i]), by(t[k]))
-                i = k
-            end
-        end
-    else
-        for k = 2:length(t)
-            if lt(by(t[k]), by(t[i]))
-                i = k
-            end
-        end
-    end
-    return (t[i], _sort(_deleteat(t, i), lt, by, rev)...)
+function sort(v::NTuple{N, T}; lt=isless, by=identity, rev::Bool=false) where {N, T}
+    v1, v2 = _split(v)
+    return _merge(sort(v1; lt=lt, by=by, rev=rev),
+                 sort(v2; lt=lt, by=by, rev=rev);
+                 lt=lt, by=by, rev=rev)
 end
-@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
-@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
+
+sort(v::Tuple{T}; lt=isless, by=identity, rev::Bool=false) where T = v
+
+function sort(v::NTuple{2, T}; lt=isless, by=identity, rev::Bool=false) where T
+    if !lt(by(v[1]), by(v[2])) || rev
+        return (v[2], v[1])
+    else
+        return v
+    end
+end
+
+function _split(v::NTuple{N, T}) where {N, T}
+    mid = N ÷ 2
+    return v[1:mid], v[mid+1:end]
+end
+_split(v::NTuple{2, T}) where T = (v[1], v[2])
+
+function _merge(x::NTuple{N, T}, y::NTuple{M, T}; lt=isless, by=identity, rev::Bool=false) where {N, M, T}
+    if lt(by(first(x)), by(first(y))) || rev
+        return (first(x), _merge(x[2:end], y; lt=lt, by=by, rev=rev)...)
+    else
+        return (first(y), _merge(x, y[2:end]; lt=lt, by=by, rev=rev)...)
+    end
+end
+
+_merge(x::Tuple{}, y::NTuple{M, T}; lt=isless, by=identity, rev::Bool=false) where {M, T} = y
+_merge(x::NTuple{N, T}, y::Tuple{}; lt=isless, by=identity, rev::Bool=false) where {N, T} = x
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
