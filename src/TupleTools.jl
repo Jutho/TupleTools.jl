@@ -231,34 +231,61 @@ end
 
 Sorts the tuple `t` using merge sort.
 """
-function sort(v::NTuple{N, T}; lt=isless, by=identity, rev::Bool=false) where {N, T}
+function sort(v::NTuple{N, T}; lt=isless, by=identity, rev::Bool=false)::NTuple{N, T} where {N, T}
     v1, v2 = _split(v)
     return _merge(sort(v1; lt=lt, by=by, rev=rev),
                  sort(v2; lt=lt, by=by, rev=rev);
                  lt=lt, by=by, rev=rev)
 end
 
-sort(v::Tuple{T}; lt=isless, by=identity, rev::Bool=false) where T = v
+(sort(v::Tuple{T}; lt=isless, by=identity, rev::Bool=false)::Tuple{T}) where T = v
+sort(v::Tuple{}; lt=isless, by=identity, rev::Bool=false)::Tuple{} = ()
 
-function sort(v::NTuple{2, T}; lt=isless, by=identity, rev::Bool=false) where T
-    if !lt(by(v[1]), by(v[2])) || rev
-        return (v[2], v[1])
+function sort(v::NTuple{2, T}; lt=isless, by=identity, rev::Bool=false)::NTuple{2, T} where T
+    if rev
+        if lt(by(v[1]), by(v[2]))
+            return (v[2], v[1])
+        else
+            return v
+        end
     else
-        return v
+        if !lt(by(v[1]), by(v[2]))
+            return (v[2], v[1])
+        else
+            return v
+        end
     end
 end
 
-function _split(v::NTuple{N, T}) where {N, T}
-    mid = N ÷ 2
-    return v[1:mid], v[mid+1:end]
+@generated function _split(v::NTuple{N, T}) where {N, T}
+    M = N ÷ 2
+    t1 = Expr(:tuple); t2 = Expr(:tuple)
+    for k in 1:M
+        push!(t1.args, :(v[$k]))
+    end
+
+    for k in M+1:N
+        push!(t2.args, :(v[$k]))
+    end
+    return quote
+        $t1, $t2
+    end
 end
 _split(v::NTuple{2, T}) where T = (v[1], v[2])
 
-function _merge(x::NTuple{N, T}, y::NTuple{M, T}; lt=isless, by=identity, rev::Bool=false) where {N, M, T}
-    if lt(by(first(x)), by(first(y))) || rev
-        return (first(x), _merge(x[2:end], y; lt=lt, by=by, rev=rev)...)
+function _merge(x::NTuple{N, T}, y::NTuple{M, T}; lt=isless, by=identity, rev::Bool=false)::NTuple{N+M, T} where {N, M, T}
+    if rev
+        if lt(by(first(x)), by(first(y)))
+            return (first(y), _merge(x, y[2:end]; lt=lt, by=by, rev=rev)...)
+        else
+            return (first(x), _merge(x[2:end], y; lt=lt, by=by, rev=rev)...)
+        end
     else
-        return (first(y), _merge(x, y[2:end]; lt=lt, by=by, rev=rev)...)
+        if lt(by(first(x)), by(first(y)))
+            return (first(x), _merge(x[2:end], y; lt=lt, by=by, rev=rev)...)
+        else
+            return (first(y), _merge(x, y[2:end]; lt=lt, by=by, rev=rev)...)
+        end
     end
 end
 
