@@ -234,26 +234,31 @@ end
 
 Sorts the tuple `t`.
 """
-@inline sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
 @inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
-    i = 1
-    if rev
-        for k = 2:length(t)
-            if lt(by(t[i]), by(t[k]))
-                i = k
-            end
-        end
-    else
-        for k = 2:length(t)
-            if lt(by(t[k]), by(t[i]))
-                i = k
-            end
-        end
-    end
-    return (t[i], _sort(_deleteat(t, i), lt, by, rev)...)
+    t1, t2 = _split(t)
+    t1s = _sort(t1, lt, by, rev)
+    t2s = _sort(t2, lt, by, rev)
+    return _merge(t1s, t2s, lt, by, rev)
 end
-@inline _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
-@inline _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
+_sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
+_sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
+
+function _split(t::NTuple{N}) where N
+    M = N>>1
+    ntuple(i->t[i], M), ntuple(i->t[i+M], N-M)
+end
+
+@inline function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
+    if lt(by(first(t1)), by(first(t2))) || rev
+        return (first(t1), _merge(tail(t1), t2, lt, by, rev)...)
+    else
+        return (first(t2), _merge(t1, tail(t2), lt, by, rev)...)
+    end
+end
+_merge(t1::Tuple{}, t2::Tuple, lt, by, rev) = t2
+_merge(t1::Tuple, t2::Tuple{}, lt, by, rev) = t1
+
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
@@ -261,29 +266,10 @@ end
 
 Computes a tuple that contains the permutation required to sort `t`.
 """
-@inline sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
+sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
 @inline function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
-    i::Int = 1
-    if rev
-        for k = 2:length(t)
-            if lt(by(t[i]), by(t[k]))
-                i = k
-            end
-        end
-    else
-        for k = 2:length(t)
-            if lt(by(t[k]), by(t[i]))
-                i = k
-            end
-        end
-    end
-    r = _sortperm(_deleteat(t, i), lt, by, rev)
-    return (i, _ishift(r, i, +1)...)
+    _sort(ntuple(identity, length(t)), lt, i->by(getindex(t, i)), rev)
 end
-@inline _sortperm(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = (1,)
-@inline _sortperm(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = ()
-
-_ishift(t::Tuple{Vararg{Int}}, i::Int, s::Int) = map(n->(n < i ? n : n+s), t)
 
 """
     getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple
