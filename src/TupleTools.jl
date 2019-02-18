@@ -250,7 +250,7 @@ function _split(t::NTuple{N}) where N
 end
 
 @inline function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
-    if lt(by(first(t1)), by(first(t2))) || rev
+    if lt(by(first(t1)), by(first(t2))) != rev
         return (first(t1), _merge(tail(t1), t2, lt, by, rev)...)
     else
         return (first(t2), _merge(t1, tail(t2), lt, by, rev)...)
