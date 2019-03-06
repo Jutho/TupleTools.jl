@@ -45,8 +45,8 @@ Returns a tuple with the first element stripped, similar to `tail(t)`, but does
 not error on an empty tuple (instead returning an empty tuple again). An empty tuple
 is thus the fixed point of this function.
 """
-@inline unsafe_tail(t::Tuple{}) = t
-@inline unsafe_tail(t::Tuple) = tail(t)
+unsafe_tail(t::Tuple{}) = t
+unsafe_tail(t::Tuple) = tail(t)
 
 """
     unsafe_front(t::Tuple) -> ::Tuple
@@ -55,8 +55,8 @@ Returns a tuple with the last element stripped, similar to `front(t)`, but does
 not error on an empty tuple (instead returning an empty tuple again). An empty tuple
 is thus the fixed point of this function.
 """
-@inline unsafe_front(t::Tuple{}) = t
-@inline unsafe_front(t::Tuple) = front(t)
+unsafe_front(t::Tuple{}) = t
+unsafe_front(t::Tuple) = front(t)
 
 """
     vcat(args...) -> ::Tuple
@@ -65,10 +65,20 @@ Like `vcat` for tuples, concatenates a combination of tuple arguments and non-tu
 arguments into a single tuple. Only works one level deep, i.e. tuples in tuples are
 not expanded.
 """
-@inline vcat(t::Tuple) = t
-@inline vcat() = ()
-@inline vcat(t) = (t,)
-@inline vcat(a, args...) = (vcat(a)..., vcat(args...)...)
+vcat(t::Tuple) = t
+vcat() = ()
+vcat(t) = (t,)
+vcat(a, args...) = (vcat(a)..., vcat(args...)...)
+
+"""
+    flatten(args...) -> ::Tuple
+
+Flatten one or more tuples into a single tuple, such that every element of that tuple is itself not a tuple, otherwise it would also be expanded (i.e. flattened).
+"""
+flatten(x::Any) = (x,)
+flatten(t::Tuple{}) = ()
+flatten(t::Tuple) = (flatten(t[1])..., flatten(tail(t))...)
+flatten(x, r...) = (flatten(x)..., flatten(r)...)
 
 """
     deleteat(t::Tuple, i::Int) -> ::Tuple

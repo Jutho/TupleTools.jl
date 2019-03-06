@@ -31,6 +31,8 @@ for i = 0:n
     @test @inferred(TupleTools.insertafter(t, i, (1,2,3))) == (vcat(p[1:i], [1,2,3], p[i+1:n])...,)
 end
 @test @inferred(TupleTools.vcat((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
+@test @inferred(TupleTools.flatten((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
+@test @inferred(TupleTools.flatten((1,(2,3)),4,(5,),(),((6,),(7,(8,))))) == (1,2,3,4,5,6,7,8)
 
 @test @inferred(TupleTools.sum(())) == 0
 @test @inferred(TupleTools.sum((1, ))) == 1
