@@ -82,46 +82,51 @@ function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
     any(i->!(1 <= i <= length(t)), I) && throw(BoundsError(t, I))
     _deleteat(t, sort(I, rev = true))
 end
-deleteat(t::Tuple, i::Int) = 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
+deleteat(t::Tuple, i::Int) =
+    1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 @inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
-@inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
+# @inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
-@inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) = _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
+@inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) =
+    _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
 
 """
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
-
 
 Insert the elements of tuple `t2` at location `i` in `t`, i.e. the output tuple will
 look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. Use
 `setindex` for setting a single value at position `i`, or `insertafter(t, i, t2)` to
 insert the contents of `t2` in between element `i` and `i+1` in `t`.
 """
-@inline insertat(t::Tuple, i::Int, t2::Tuple) = 1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
-@inline _insertat(t::Tuple, i::Int, t2::Tuple) = i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
+insertat(t::Tuple, i::Int, t2::Tuple) =
+    1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
+@inline _insertat(t::Tuple, i::Int, t2::Tuple) =
+    i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
 @inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
 
 """
     insertafter(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
 
-
 Insert the elements of tuple `t2` after location `i` in `t`, i.e. the output tuple will
 look as (t[1:i]..., t2..., t[i+1:end]). Use index `i=0` or just `(t2..., t...)` to insert
 `t2` in front of `t`; also see `insertat` to overwrite the element at position `i`.
 """
-@inline insertafter(t::Tuple, i::Int, t2::Tuple) = 0 <= i <= length(t) ? _insertafter(t, i, t2) : throw(BoundsError(t, i))
-@inline _insertafter(t::Tuple, i::Int, t2::Tuple) = i == 0 ? (t2..., t...) : (t[1], _insertafter(tail(t), i-1, t2)...)
-@inline _insertafter(t::Tuple{}, i::Int, t2::Tuple) = i == 0 ? t2 : throw(BoundsError(t, i))
+insertafter(t::Tuple, i::Int, t2::Tuple) =
+    0 <= i <= length(t) ? _insertafter(t, i, t2) : throw(BoundsError(t, i))
+@inline _insertafter(t::Tuple, i::Int, t2::Tuple) =
+    i == 0 ? (t2..., t...) : (t[1], _insertafter(tail(t), i-1, t2)...)
+@inline _insertafter(t::Tuple{}, i::Int, t2::Tuple) =
+    i == 0 ? t2 : throw(BoundsError(t, i))
 
 """
     sum(t::Tuple)
 
 Returns the sum of the element of a tuple, or `0` for an empty tuple.
 """
-@inline sum(t::Tuple{}) = 0
-@inline sum(t::Tuple{Any}) = t[1]
-@inline sum(t::Tuple) = t[1]+sum(tail(t))
+sum(t::Tuple{}) = 0
+sum(t::Tuple{Any}) = t[1]
+sum(t::Tuple) = t[1]+sum(tail(t))
 
 """
     cumsum(t::Tuple)
@@ -140,9 +145,9 @@ cumsum(t::Tuple{}) = t
 
 Returns the product of the elements of a tuple, or `1` for an empty tuple.
 """
-@inline prod(t::Tuple{}) = 1
-@inline prod(t::Tuple{Any}) = t[1]
-@inline prod(t::Tuple) = t[1]*prod(tail(t))
+prod(t::Tuple{}) = 1
+prod(t::Tuple{Any}) = t[1]
+prod(t::Tuple) = t[1]*prod(tail(t))
 
 """
     cumprod(t::Tuple)
@@ -151,7 +156,7 @@ Returns the cumulative product of the elements of a tuple, or `()` for an empty 
 """
 function cumprod(t::Tuple)
     t_1, t_tail = first(t), tail(t)
-    return (t_1,cumprod((t_1*first(t_tail),tail(t_tail)...))...)
+    return (t_1, cumprod((t_1*first(t_tail), tail(t_tail)...))...)
 end
 cumprod(t::Tuple{Any}) = t
 cumprod(t::Tuple{}) = t
@@ -161,17 +166,16 @@ cumprod(t::Tuple{}) = t
 
 Returns the smallest element of a tuple
 """
-@inline minimum(t::Tuple{Any}) = t[1]
-@inline minimum(t::Tuple) = min(t[1], minimum(tail(t)))
+minimum(t::Tuple{Any}) = t[1]
+minimum(t::Tuple) = min(t[1], minimum(tail(t)))
 
 """
     maximum(t::Tuple)
 
 Returns the largest element of a tuple
 """
-@inline maximum(t::Tuple{Any}) = t[1]
-@inline maximum(t::Tuple) = max(t[1], maximum(tail(t)))
-
+maximum(t::Tuple{Any}) = t[1]
+maximum(t::Tuple) = max(t[1], maximum(tail(t)))
 
 """
     argmin(t::Tuple)
@@ -180,7 +184,6 @@ Returns the index of the minimum element in a tuple. If there are multiple
 minimal elements, then the first one will be returned.
 """
 argmin(t::Tuple) = findmin(t)[2]
-
 
 """
     argmax(t::Tuple)
@@ -198,7 +201,7 @@ minimal elements, then the first one will be returned.
 """
 findmin(t::Tuple{Any}) = (t[1], 1)
 findmin(t::Tuple) = _findmin(tail(t),2,t[1],1)
-@inline _findmin(t::Tuple{}, s, v, i) = (v, i)
+_findmin(t::Tuple{}, s, v, i) = (v, i)
 @inline function _findmin(t::Tuple, s, v, i)
     if t[1] < v
         _findmin(tail(t), s+1, t[1], s)
@@ -215,7 +218,7 @@ maximal elements, then the first one will be returned.
 """
 findmax(::Tuple{Any}) = (t[1], 1)
 findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
-@inline _findmax(t::Tuple{}, s, v, i) = (v, i)
+_findmax(t::Tuple{}, s, v, i) = (v, i)
 @inline function _findmax(t::Tuple, s, v, i)
     if t[1] > v
         _findmax(tail(t), s+1, t[1], s)
@@ -223,8 +226,6 @@ findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
         _findmax(tail(t), s+1, v, i)
     end
 end
-
-
 
 """
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
@@ -273,19 +274,23 @@ end
 
 Get the indices `t[i] for i in I`, again as tuple.
 """
-@inline getindices(t::Tuple, ind::Tuple{Vararg{Int}}) = (t[ind[1]], getindices(t, tail(ind))...)
-@inline getindices(t::Tuple, ind::Tuple{}) = ()
+getindices(t::Tuple, ind::Tuple{Vararg{Int}}) =
+    (t[ind[1]], getindices(t, tail(ind))...)
+getindices(t::Tuple, ind::Tuple{}) = ()
 
 """
     permute(t::Tuple, p) -> ::Tuple
 
 Permute the elements of tuple `t` according to the permutation in `p`.
 """
-@inline permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = isperm(p) ? _permute(t, p) : throw(ArgumentError("not a valid permutation: $p"))
-@inline permute(t::NTuple{N,Any}, p) where {N} = isperm(p) && length(p) == N ? _permute(t,p) : throw(ArgumentError("not a valid permutation: $p"))
+permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} =
+    isperm(p) ? _permute(t, p) : throw(ArgumentError("not a valid permutation: $p"))
+permute(t::NTuple{N,Any}, p) where {N} =
+    isperm(p) && length(p) == N ? _permute(t, p) :
+        throw(ArgumentError("not a valid permutation: $p"))
 
-@inline _permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = getindices(t, p)
-@inline _permute(t::NTuple{N,Any}, p) where {N} = ntuple(n->t[p[n]], StaticLength(N))
+_permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = getindices(t, p)
+_permute(t::NTuple{N,Any}, p) where {N} = ntuple(n->t[p[n]], StaticLength(N))
 
 """
     isperm(p) -> ::Bool
@@ -308,7 +313,7 @@ end
 
 Inverse permutation of a permutation `p`.
 """
-invperm(p::Tuple{Vararg{Int}}) = sortperm(p)
+invperm(p::Tuple{Vararg{Int}}) = _sortperm(p)
 
 """
     diff(v::Tuple) -> Tuple
