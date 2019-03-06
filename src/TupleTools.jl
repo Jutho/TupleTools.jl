@@ -216,7 +216,7 @@ end
 Returns the value and index of the maximum element in a tuple. If there are multiple
 maximal elements, then the first one will be returned.
 """
-findmax(::Tuple{Any}) = (t[1], 1)
+findmax(t::Tuple{Any}) = (t[1], 1)
 findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
 _findmax(t::Tuple{}, s, v, i) = (v, i)
 @inline function _findmax(t::Tuple, s, v, i)
