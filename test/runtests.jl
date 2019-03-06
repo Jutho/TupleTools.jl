@@ -27,9 +27,15 @@ for i = 1:n
     @test @inferred(TupleTools.insertat(t, i, (1,2,3))) == (vcat(p[1:i-1], [1,2,3], p[i+1:n])...,)
 end
 @test @inferred(TupleTools.deleteat((1,2,3,4,5,6), (3,1,5))) == (2,4,6)
+@test_throws BoundsError TupleTools.deleteat(t, 0)
+@test_throws BoundsError TupleTools.deleteat(t, n+1)
+@test_throws BoundsError TupleTools.insertat(t, 0, (1,2,3))
+@test_throws BoundsError TupleTools.insertat(t, n+1, (1,2,3))
 for i = 0:n
     @test @inferred(TupleTools.insertafter(t, i, (1,2,3))) == (vcat(p[1:i], [1,2,3], p[i+1:n])...,)
 end
+@test_throws BoundsError TupleTools.insertafter(t, -1, (1,2,3))
+@test_throws BoundsError TupleTools.insertafter(t, n+1, (1,2,3))
 @test @inferred(TupleTools.vcat((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
 @test @inferred(TupleTools.flatten((1,2,3),4,(5,),(),(6,7,8))) == (1,2,3,4,5,6,7,8)
 @test @inferred(TupleTools.flatten((1,(2,3)),4,(5,),(),((6,),(7,(8,))))) == (1,2,3,4,5,6,7,8)

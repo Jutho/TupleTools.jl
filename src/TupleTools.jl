@@ -95,7 +95,6 @@ end
 deleteat(t::Tuple, i::Int) =
     1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 @inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
-# @inline _deleteat(t::Tuple{}, i::Int) = throw(BoundsError(t, i))
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
 @inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) =
@@ -113,7 +112,6 @@ insertat(t::Tuple, i::Int, t2::Tuple) =
     1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
 @inline _insertat(t::Tuple, i::Int, t2::Tuple) =
     i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
-@inline _insertat(t::Tuple{}, i::Int, t2::Tuple) = throw(BoundsError(t, i))
 
 """
     insertafter(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
@@ -126,8 +124,6 @@ insertafter(t::Tuple, i::Int, t2::Tuple) =
     0 <= i <= length(t) ? _insertafter(t, i, t2) : throw(BoundsError(t, i))
 @inline _insertafter(t::Tuple, i::Int, t2::Tuple) =
     i == 0 ? (t2..., t...) : (t[1], _insertafter(tail(t), i-1, t2)...)
-@inline _insertafter(t::Tuple{}, i::Int, t2::Tuple) =
-    i == 0 ? t2 : throw(BoundsError(t, i))
 
 """
     sum(t::Tuple)
@@ -145,7 +141,7 @@ Returns the cumulative sum of the elements of a tuple, or `()` for an empty tupl
 """
 function cumsum(t::Tuple)
     t_1, t_tail = first(t), tail(t)
-    return (t_1,cumsum((t_1+first(t_tail),tail(t_tail)...))...)
+    return (t_1, cumsum((t_1 + first(t_tail), tail(t_tail)...))...)
 end
 cumsum(t::Tuple{Any}) = t
 cumsum(t::Tuple{}) = t
@@ -209,16 +205,7 @@ argmax(t::Tuple) = findmax(t)[2]
 Returns the value and index of the minimum element in a tuple. If there are multiple
 minimal elements, then the first one will be returned.
 """
-findmin(t::Tuple{Any}) = (t[1], 1)
-findmin(t::Tuple) = _findmin(tail(t),2,t[1],1)
-_findmin(t::Tuple{}, s, v, i) = (v, i)
-@inline function _findmin(t::Tuple, s, v, i)
-    if t[1] < v
-        _findmin(tail(t), s+1, t[1], s)
-    else
-        _findmin(tail(t), s+1, v, i)
-    end
-end
+findmin(t::Tuple) = Base.findmin(t)
 
 """
     findmax(t::Tuple)
@@ -226,16 +213,7 @@ end
 Returns the value and index of the maximum element in a tuple. If there are multiple
 maximal elements, then the first one will be returned.
 """
-findmax(t::Tuple{Any}) = (t[1], 1)
-findmax(t::Tuple) = _findmax(tail(t),2,t[1],1)
-_findmax(t::Tuple{}, s, v, i) = (v, i)
-@inline function _findmax(t::Tuple, s, v, i)
-    if t[1] > v
-        _findmax(tail(t), s+1, t[1], s)
-    else
-        _findmax(tail(t), s+1, v, i)
-    end
-end
+findmax(t::Tuple) = Base.findmax(t)
 
 """
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
@@ -257,7 +235,7 @@ function _split(t::NTuple{N}) where N
     ntuple(i->t[i], M), ntuple(i->t[i+M], N-M)
 end
 
-@inline function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
+function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
     if lt(by(first(t1)), by(first(t2))) != rev
         return (first(t1), _merge(tail(t1), t2, lt, by, rev)...)
     else
@@ -275,7 +253,7 @@ _merge(t1::Tuple, t2::Tuple{}, lt, by, rev) = t1
 Computes a tuple that contains the permutation required to sort `t`.
 """
 sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
-@inline function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
+function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     _sort(ntuple(identity, length(t)), lt, i->by(getindex(t, i)), rev)
 end
 
