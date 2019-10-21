@@ -4,8 +4,6 @@ Type stable methods for small tuples
 module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
-# import Base: permute # TODO: this can disappear when Sparse moves out of Base
-import Base: cumsum, cumprod
 
 """
     struct StaticLength{N} end
