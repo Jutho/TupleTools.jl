@@ -113,9 +113,9 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#Base.cumsum",
+    "location": "#TupleTools.cumsum",
     "page": "Home",
-    "title": "Base.cumsum",
+    "title": "TupleTools.cumsum",
     "category": "function",
     "text": "cumsum(t::Tuple)\n\nReturns the cumulative sum of the elements of a tuple, or () for an empty tuple.\n\n\n\n\n\n"
 },
@@ -137,9 +137,9 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#Base.cumprod",
+    "location": "#TupleTools.cumprod",
     "page": "Home",
-    "title": "Base.cumprod",
+    "title": "TupleTools.cumprod",
     "category": "function",
     "text": "cumprod(t::Tuple)\n\nReturns the cumulative product of the elements of a tuple, or () for an empty tuple.\n\n\n\n\n\n"
 },
