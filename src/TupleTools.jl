@@ -240,8 +240,9 @@ function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
         return (first(t2), _merge(t1, tail(t2), lt, by, rev)...)
     end
 end
-_merge(t1::Tuple{}, t2::Tuple, lt, by, rev) = t2
-_merge(t1::Tuple, t2::Tuple{}, lt, by, rev) = t1
+_merge(::Tuple{}, t2::Tuple, lt, by, rev) = t2
+_merge(t1::Tuple, ::Tuple{}, lt, by, rev) = t1
+_merge(::Tuple{}, ::Tuple{}, lt, by, rev) = ()
 
 
 """
@@ -252,7 +253,7 @@ Computes a tuple that contains the permutation required to sort `t`.
 """
 sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
 function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
-    _sort(ntuple(identity, length(t)), lt, i->by(getindex(t, i)), rev)
+    map(first, _sort(ntuple(n->(n,by(t[n])), length(t)), lt, last, rev))
 end
 
 """
