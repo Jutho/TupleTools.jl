@@ -5,7 +5,7 @@ module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
 import Base: getindex
-using StaticArrays: MVector
+using StaticArrays: SVector, MVector
 
 """
     struct StaticLength{N} end
@@ -261,7 +261,9 @@ findmax(t::Tuple) = Base.findmax(t)
 
 Sorts the tuple `t`.
 """
-sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+#sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = length(t)<=10 ? _sort(t, lt, by, rev) : _sort_long(t, lt, by, rev)
+
 @inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     t1, t2 = _split(t)
     t1s = _sort(t1, lt, by, rev)
@@ -288,16 +290,32 @@ _merge(t1::Tuple, ::Tuple{}, lt, by, rev) = t1
 _merge(::Tuple{}, ::Tuple{}, lt, by, rev) = ()
 
 
+function _sort_long(t, lt=isless, by=identity, rev::Bool=false)
+	s = MVector(t)
+	sort!(s; lt =lt, by = by, rev = rev, alg = QuickSort)
+	Tuple(s)
+end
+
+
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
 
 
 Computes a tuple that contains the permutation required to sort `t`.
 """
-sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
+#sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
+sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = length(t)<=10 ? _sortperm(t, lt, by, rev) : _sortperm_long(t, lt, by, rev)
+
 function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     map(first, _sort(ntuple(n->(n,by(t[n])), length(t)), lt, last, rev))
 end
+
+function _sortperm_long(t, lt=isless, by=identity, rev::Bool=false)
+	s = MVector(t)
+	sortperm!(s, SVector(t); lt =lt, by = by, rev = rev, alg = QuickSort)
+	Tuple(s)
+end
+
 
 """
     getindices(t::Tuple, I::Tuple{Vararg{Int}}) -> ::Tuple
@@ -347,7 +365,31 @@ end
 
 Inverse permutation of a permutation `p`.
 """
-invperm(p::Tuple{Vararg{Int}}) = _sortperm(p)
+invperm(p::Tuple{Vararg{Int}}) = length(p)<=6 ? _sortperm(p) : _invperm_long(p)
+
+# Note:  Whether t is a permutation is not checked.
+function invperm_long(t::Tuple{Vararg{<:Number}})
+	p = MVector{length(t), Int}(undef)
+	for i = 1:length(t)
+		p[t[i]] = i
+	end
+	Tuple(p)
+end
+
+
+"""
+	invpermute(t::Tuple, p::Tuple)
+
+Returns `s` such that `s[p] = t`.  `p` is not checked.
+"""
+function invpermute(t::NTuple{N}, p::NTuple{N,<:Number}) where {N}
+	s = MVector{length(t), Int}(undef)
+	for i = 1:length(t)
+		s[p[i]] = t[i]
+	end
+	Tuple(s)
+end
+
 
 """
     diff(v::Tuple) -> Tuple
