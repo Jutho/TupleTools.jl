@@ -4,6 +4,8 @@ Type stable methods for small tuples
 module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
+import Base: getindex
+using StaticArrays: MVector
 
 """
     struct StaticLength{N} end
@@ -27,6 +29,47 @@ Base.@pure Base.:+(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂}
 Base.@pure Base.:-(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂} = StaticLength(max(0,N₁-N₂))
 
 @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N}())
+
+"""
+	ntuple(f, n, T)
+
+Create an `NTuple{n,T}` with values `(f(1), ..., f(n))`. For n>10, this is much faster
+than `ntuple(f, n)`.  An `InexactError` will occur if any of `f(1),...,f(n)` cannot be
+converted to type `T`.
+"""
+function Base.ntuple(f, n::Integer, ::Type{T}) where {T}
+	t = n == 0  ? () :
+		n == 1  ? NTuple{n,T}((f(1),)) :
+		n == 2  ? NTuple{n,T}((f(1), f(2))) :
+		n == 3  ? NTuple{n,T}((f(1), f(2), f(3))) :
+		n == 4  ? NTuple{n,T}((f(1), f(2), f(3), f(4))) :
+		n == 5  ? NTuple{n,T}((f(1), f(2), f(3), f(4), f(5))) :
+		n == 6  ? NTuple{n,T}((f(1), f(2), f(3), f(4), f(5), f(6))) :
+		n == 7  ? NTuple{n,T}((f(1), f(2), f(3), f(4), f(5), f(6), f(7))) :
+		n == 8  ? NTuple{n,T}((f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8))) :
+		n == 9  ? NTuple{n,T}((f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8), f(9))) :
+		n == 10 ? NTuple{n,T}((f(1), f(2), f(3), f(4), f(5), f(6), f(7), f(8), f(9), f(10))) :
+		begin
+			v = MVector{n, T}(undef)
+			@inbounds for i in 1:n
+				v[i] = f(i)
+			end
+			Tuple(v)
+		end
+end
+
+
+"""
+	oneto(n::Integer)
+
+Construct the tuple `(1,2,...,n)`.
+"""
+oneto(n::T) where {T<:Integer} = ntuple(identity, n, T)
+# When N can be inferred, the following are compile-time generated.
+oneto(::Val{0}) = ()
+oneto(::Val{N}) where {N} = (oneto(Val(N-1))..., N)
+
+
 @inline argtail2(a, b, c...) = c
 
 """
@@ -265,6 +308,10 @@ getindices(t::Tuple, ind::Tuple{Vararg{Int}}) =
     (t[ind[1]], getindices(t, tail(ind))...)
 getindices(t::Tuple, ind::Tuple{}) = ()
 
+
+getindex(t::Tuple, b::Tuple{Vararg{Bool}}) = length(b) == length(t) ? getindex(t, findall(b)) : throw(BoundsError(t, b))
+
+
 """
     permute(t::Tuple, p) -> ::Tuple
 
@@ -310,5 +357,7 @@ Finite difference operator of tuple `v`.
 diff(v::Tuple{}) = () # similar to diff([])
 diff(v::Tuple{Any}) = ()
 diff(v::Tuple) = (v[2]-v[1], diff(Base.tail(v))...)
+
+
 
 end # module
