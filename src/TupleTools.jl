@@ -4,7 +4,7 @@ Type stable methods for small tuples
 module TupleTools
 
 using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, tail, front, setindex
-import Base: getindex
+import Base: getindex, +, -, *, /
 using StaticArrays: SVector, MVector
 
 """
@@ -368,7 +368,7 @@ Inverse permutation of a permutation `p`.
 invperm(p::Tuple{Vararg{Int}}) = length(p)<=6 ? _sortperm(p) : _invperm_long(p)
 
 # Note:  Whether t is a permutation is not checked.
-function invperm_long(t::Tuple{Vararg{<:Number}})
+function _invperm_long(t::Tuple{Vararg{<:Number}})
 	p = MVector{length(t), Int}(undef)
 	for i = 1:length(t)
 		p[t[i]] = i
