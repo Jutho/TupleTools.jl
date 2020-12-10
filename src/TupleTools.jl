@@ -27,6 +27,28 @@ Base.@pure Base.:+(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂}
 Base.@pure Base.:-(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂} = StaticLength(max(0,N₁-N₂))
 
 @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N}())
+
+mutable struct MutableNTuple{N,T}
+    data::NTuple{N,T}
+    function MutableNTuple(data::NTuple{N,T}) where {N,T}
+        @assert isbitstype(T)
+        return new{N,T}(data)
+    end
+end
+
+Base.@propagate_inbounds function Base.getindex(t::MutableNTuple{N,T}, i::Int) where {N,T}
+    @boundscheck checkbounds(Base.OneTo(N),i)
+    GC.@preserve t unsafe_load(Base.unsafe_convert(Ptr{T}, pointer_from_objref(t)), i)
+end
+
+Base.@propagate_inbounds function Base.setindex!(t::MutableNTuple{N,T}, val, i::Int) where {N,T}
+    @boundscheck checkbounds(Base.OneTo(N),i)
+    GC.@preserve t unsafe_store!(Base.unsafe_convert(Ptr{T}, pointer_from_objref(t)), convert(T, val), i)
+    return t
+end
+
+@inline Base.Tuple(t::MutableNTuple) = t.data
+
 @inline argtail2(a, b, c...) = c
 
 """
@@ -130,7 +152,7 @@ Returns the sum of the element of a tuple, or `0` for an empty tuple.
 """
 sum(t::Tuple{}) = 0
 sum(t::Tuple{Any}) = t[1]
-sum(t::Tuple) = t[1]+sum(tail(t))
+sum(t::Tuple) = t[1] + sum(tail(t))
 
 """
     cumsum(t::Tuple)
@@ -151,7 +173,7 @@ Returns the product of the elements of a tuple, or `1` for an empty tuple.
 """
 prod(t::Tuple{}) = 1
 prod(t::Tuple{Any}) = t[1]
-prod(t::Tuple) = t[1]*prod(tail(t))
+prod(t::Tuple) = t[1] * prod(tail(t))
 
 """
     cumprod(t::Tuple)
@@ -284,16 +306,41 @@ _permute(t::NTuple{N,Any}, p) where {N} = ntuple(n->t[p[n]], StaticLength(N))
 
 A non-allocating alternative to Base.isperm(p) that is much faster for small permutations.
 """
-function isperm(p)
-    N = length(p)
-    @inbounds for i = 1:N
-        1 <= p[i] <= N || return false
-        for j = i+1:N
-            p[i] == p[j] && return false
+function isperm(p::NTuple{N,Integer}) where N
+    used = MutableNTuple(ntuple(n->false, Val(N)))
+    @inbounds for i in p
+        if 0 < i <= N && used[i] == false
+            used[i] = true
+        else
+            return false
         end
     end
     return true
 end
+isperm(p::Tuple{}) = true
+isperm(p::Tuple{Int}) = p[1] == 1
+isperm(p::Tuple{Int,Int}) = ((p[1] == 1) & (p[2] == 2)) | ((p[1] == 2) & (p[2] == 1))
+function isperm(p::Tuple{Int,Int,Int})
+    return !(p[1] < 1 || p[1] > 3 || p[2] < 1 || p[2] > 3 || p[3] < 1 || p[3] > 3 ||
+                p[1] == p[2] || p[1] == p[3] || p[2] == p[3])
+end
+function isperm(p::Tuple{Int,Int,Int,Int})
+    return !(p[1] < 1 || p[1] > 4 || p[2] < 1 || p[2] > 4 ||
+                p[3] < 1 || p[3] > 4 || p[4] < 1 || p[4] > 4 ||
+                p[1] == p[2] || p[1] == p[3] || p[1] == p[4] ||
+                p[2] == p[3] || p[2] == p[4] || p[3] == p[4])
+end
+
+# function isperm(p)
+#     N = length(p)
+#     @inbounds for i = 1:N
+#         1 <= p[i] <= N || return false
+#         for j = i+1:N
+#             p[i] == p[j] && return false
+#         end
+#     end
+#     return true
+# end
 
 """
     invperm(p::NTuple{N,Int}) -> ::NTuple{N,Int}
