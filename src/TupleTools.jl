@@ -250,7 +250,8 @@ end
 _sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
 _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
 
-function _split(t::NTuple{N}) where N
+function _split(t::Tuple)
+    N = length(t)
     M = N>>1
     ntuple(i->t[i], M), ntuple(i->t[i+M], N-M)
 end

@@ -77,3 +77,5 @@ end
 @test @inferred(TupleTools.diff(())) == ()
 @test @inferred(TupleTools.diff((1, ))) == ()
 @test @inferred(TupleTools.diff((1, 2, 3))) == (1, 1)
+
+@test TupleTools.sort((2,1,3.0)) === (1,2,3.0)
