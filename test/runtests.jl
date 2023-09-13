@@ -91,5 +91,5 @@ end
     using Aqua
     Aqua.test_all(TupleTools;
                   project_toml_formatting=(VERSION >= v"1.9"),
-                  unbound_args = false)
+                  unbound_args=false)
 end
