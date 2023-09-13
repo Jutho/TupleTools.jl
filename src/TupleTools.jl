@@ -23,8 +23,12 @@ StaticLength(N₁) - StaticLength(N₂) == StaticLength(max(0, N₁-N₂))
 struct StaticLength{N}
 end
 Base.@pure StaticLength(N::Int) = StaticLength{N}()
-Base.@pure Base.:+(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂} = StaticLength(N₁+N₂)
-Base.@pure Base.:-(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂} = StaticLength(max(0,N₁-N₂))
+Base.@pure function Base.:+(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂}
+    return StaticLength(N₁ + N₂)
+end
+Base.@pure function Base.:-(::StaticLength{N₁}, ::StaticLength{N₂}) where {N₁,N₂}
+    return StaticLength(max(0, N₁ - N₂))
+end
 
 @inline Base.ntuple(f, ::StaticLength{N}) where {N} = ntuple(f, Val{N}())
 
@@ -37,13 +41,15 @@ mutable struct MutableNTuple{N,T}
 end
 
 Base.@propagate_inbounds function Base.getindex(t::MutableNTuple{N,T}, i::Int) where {N,T}
-    @boundscheck checkbounds(Base.OneTo(N),i)
+    @boundscheck checkbounds(Base.OneTo(N), i)
     GC.@preserve t unsafe_load(Base.unsafe_convert(Ptr{T}, pointer_from_objref(t)), i)
 end
 
-Base.@propagate_inbounds function Base.setindex!(t::MutableNTuple{N,T}, val, i::Int) where {N,T}
-    @boundscheck checkbounds(Base.OneTo(N),i)
-    GC.@preserve t unsafe_store!(Base.unsafe_convert(Ptr{T}, pointer_from_objref(t)), convert(T, val), i)
+Base.@propagate_inbounds function Base.setindex!(t::MutableNTuple{N,T}, val,
+                                                 i::Int) where {N,T}
+    @boundscheck checkbounds(Base.OneTo(N), i)
+    GC.@preserve t unsafe_store!(Base.unsafe_convert(Ptr{T}, pointer_from_objref(t)),
+                                 convert(T, val), i)
     return t
 end
 
@@ -108,17 +114,21 @@ Delete the element at location `i` in `t`; if a list `I` of indices is specified
 (again as a tuple), the elements of these different positions are deleted.
 """
 deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
-function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
-    any(i->!(1 <= i <= length(t)), I) && throw(BoundsError(t, I))
-    _deleteat(t, sort(I, rev = true))
+function deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}})
+    any(i -> !(1 <= i <= length(t)), I) && throw(BoundsError(t, I))
+    return _deleteat(t, sort(I; rev=true))
 end
-deleteat(t::Tuple, i::Int) =
-    1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
-@inline _deleteat(t::Tuple, i::Int) = i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i-1)...)
+function deleteat(t::Tuple, i::Int)
+    return 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
+end
+@inline function _deleteat(t::Tuple, i::Int)
+    return i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i - 1)...)
+end
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
-@inline _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}}) =
-    _deleteat(_deleteat(t, I[1]), tail(I)) # assumes sorted from big to small
+@inline function _deleteat(t::Tuple, I::Tuple{Int,Int,Vararg{Int}})
+    return _deleteat(_deleteat(t, I[1]), tail(I))
+end # assumes sorted from big to small
 
 """
     insertat(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
@@ -128,10 +138,12 @@ look as (t[1:i-1]..., t2..., t[i+1:end]). Note that element `t[i]` is deleted. U
 `setindex` for setting a single value at position `i`, or `insertafter(t, i, t2)` to
 insert the contents of `t2` in between element `i` and `i+1` in `t`.
 """
-insertat(t::Tuple, i::Int, t2::Tuple) =
-    1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
-@inline _insertat(t::Tuple, i::Int, t2::Tuple) =
-    i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i-1, t2)...)
+function insertat(t::Tuple, i::Int, t2::Tuple)
+    return 1 <= i <= length(t) ? _insertat(t, i, t2) : throw(BoundsError(t, i))
+end
+@inline function _insertat(t::Tuple, i::Int, t2::Tuple)
+    return i == 1 ? (t2..., tail(t)...) : (t[1], _insertat(tail(t), i - 1, t2)...)
+end
 
 """
     insertafter(t::Tuple, i::Int, t2::Tuple) -> ::Tuple
@@ -140,10 +152,12 @@ Insert the elements of tuple `t2` after location `i` in `t`, i.e. the output tup
 look as (t[1:i]..., t2..., t[i+1:end]). Use index `i=0` or just `(t2..., t...)` to insert
 `t2` in front of `t`; also see `insertat` to overwrite the element at position `i`.
 """
-insertafter(t::Tuple, i::Int, t2::Tuple) =
-    0 <= i <= length(t) ? _insertafter(t, i, t2) : throw(BoundsError(t, i))
-@inline _insertafter(t::Tuple, i::Int, t2::Tuple) =
-    i == 0 ? (t2..., t...) : (t[1], _insertafter(tail(t), i-1, t2)...)
+function insertafter(t::Tuple, i::Int, t2::Tuple)
+    return 0 <= i <= length(t) ? _insertafter(t, i, t2) : throw(BoundsError(t, i))
+end
+@inline function _insertafter(t::Tuple, i::Int, t2::Tuple)
+    return i == 0 ? (t2..., t...) : (t[1], _insertafter(tail(t), i - 1, t2)...)
+end
 
 """
     sum(t::Tuple)
@@ -182,7 +196,7 @@ Returns the cumulative product of the elements of a tuple, or `()` for an empty 
 """
 function cumprod(t::Tuple)
     t_1, t_tail = first(t), tail(t)
-    return (t_1, cumprod((t_1*first(t_tail), tail(t_tail)...))...)
+    return (t_1, cumprod((t_1 * first(t_tail), tail(t_tail)...))...)
 end
 cumprod(t::Tuple{Any}) = t
 cumprod(t::Tuple{}) = t
@@ -252,8 +266,8 @@ _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
 
 function _split(t::Tuple)
     N = length(t)
-    M = N>>1
-    ntuple(i->t[i], M), ntuple(i->t[i+M], N-M)
+    M = N >> 1
+    return ntuple(i -> t[i], M), ntuple(i -> t[i + M], N - M)
 end
 
 function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
@@ -267,7 +281,6 @@ _merge(::Tuple{}, t2::Tuple, lt, by, rev) = t2
 _merge(t1::Tuple, ::Tuple{}, lt, by, rev) = t1
 _merge(::Tuple{}, ::Tuple{}, lt, by, rev) = ()
 
-
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
 
@@ -276,7 +289,7 @@ Computes a tuple that contains the permutation required to sort `t`.
 """
 sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
 function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
-    map(first, _sort(ntuple(n->(n,by(t[n])), length(t)), lt, last, rev))
+    return map(first, _sort(ntuple(n -> (n, by(t[n])), length(t)), lt, last, rev))
 end
 
 """
@@ -284,8 +297,7 @@ end
 
 Get the indices `t[i] for i in I`, again as tuple.
 """
-getindices(t::Tuple, ind::Tuple{Vararg{Int}}) =
-    (t[ind[1]], getindices(t, tail(ind))...)
+getindices(t::Tuple, ind::Tuple{Vararg{Int}}) = (t[ind[1]], getindices(t, tail(ind))...)
 getindices(t::Tuple, ind::Tuple{}) = ()
 
 """
@@ -293,22 +305,24 @@ getindices(t::Tuple, ind::Tuple{}) = ()
 
 Permute the elements of tuple `t` according to the permutation in `p`.
 """
-permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} =
-    isperm(p) ? _permute(t, p) : throw(ArgumentError("not a valid permutation: $p"))
-permute(t::NTuple{N,Any}, p) where {N} =
-    isperm(p) && length(p) == N ? _permute(t, p) :
-        throw(ArgumentError("not a valid permutation: $p"))
+function permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N}
+    return isperm(p) ? _permute(t, p) : throw(ArgumentError("not a valid permutation: $p"))
+end
+function permute(t::NTuple{N,Any}, p) where {N}
+    return isperm(p) && length(p) == N ? _permute(t, p) :
+           throw(ArgumentError("not a valid permutation: $p"))
+end
 
 _permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = getindices(t, p)
-_permute(t::NTuple{N,Any}, p) where {N} = ntuple(n->t[p[n]], StaticLength(N))
+_permute(t::NTuple{N,Any}, p) where {N} = ntuple(n -> t[p[n]], StaticLength(N))
 
 """
     isperm(p) -> ::Bool
 
 A non-allocating alternative to Base.isperm(p) that is much faster for small permutations.
 """
-function isperm(p::NTuple{N,Integer}) where N
-    used = MutableNTuple(ntuple(n->false, Val(N)))
+function isperm(p::NTuple{N,Integer}) where {N}
+    used = MutableNTuple(ntuple(n -> false, Val(N)))
     @inbounds for i in p
         if 0 < i <= N && used[i] == false
             used[i] = true
@@ -323,13 +337,13 @@ isperm(p::Tuple{Int}) = p[1] == 1
 isperm(p::Tuple{Int,Int}) = ((p[1] == 1) & (p[2] == 2)) | ((p[1] == 2) & (p[2] == 1))
 function isperm(p::Tuple{Int,Int,Int})
     return !(p[1] < 1 || p[1] > 3 || p[2] < 1 || p[2] > 3 || p[3] < 1 || p[3] > 3 ||
-                p[1] == p[2] || p[1] == p[3] || p[2] == p[3])
+             p[1] == p[2] || p[1] == p[3] || p[2] == p[3])
 end
 function isperm(p::Tuple{Int,Int,Int,Int})
     return !(p[1] < 1 || p[1] > 4 || p[2] < 1 || p[2] > 4 ||
-                p[3] < 1 || p[3] > 4 || p[4] < 1 || p[4] > 4 ||
-                p[1] == p[2] || p[1] == p[3] || p[1] == p[4] ||
-                p[2] == p[3] || p[2] == p[4] || p[3] == p[4])
+             p[3] < 1 || p[3] > 4 || p[4] < 1 || p[4] > 4 ||
+             p[1] == p[2] || p[1] == p[3] || p[1] == p[4] ||
+             p[2] == p[3] || p[2] == p[4] || p[3] == p[4])
 end
 
 # function isperm(p)
@@ -357,6 +371,6 @@ Finite difference operator of tuple `v`.
 """
 diff(v::Tuple{}) = () # similar to diff([])
 diff(v::Tuple{Any}) = ()
-diff(v::Tuple) = (v[2]-v[1], diff(Base.tail(v))...)
+diff(v::Tuple) = (v[2] - v[1], diff(Base.tail(v))...)
 
 end # module
