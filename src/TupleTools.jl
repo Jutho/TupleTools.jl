@@ -317,6 +317,15 @@ _permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = getindices(t, p)
 _permute(t::NTuple{N,Any}, p) where {N} = ntuple(n -> t[p[n]], StaticLength(N))
 
 """
+    circshift(t::NTuple{N,Any}, i::Int) -> ::NTuple{N,Any}
+
+Circularly shift the elements of tuple `t` by `i` positions.
+"""
+function circshift(t::NTuple{N,Any}, i::Int) where {N}
+    return ntuple(n -> t[mod1(n - i, N)], StaticLength(N))
+end
+
+"""
     isperm(p) -> ::Bool
 
 A non-allocating alternative to Base.isperm(p) that is much faster for small permutations.

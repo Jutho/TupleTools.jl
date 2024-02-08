@@ -78,6 +78,7 @@ using Base: tail, front
     @test @inferred(TupleTools.isperm(t)) == true
     @test @inferred(TupleTools.isperm((1, 2, 1))) == false
     @test @inferred(TupleTools.permute(t, t)) == (p[p]...,)
+    @test @inferred(TupleTools.circshift(t, 3)) == tuple(circshift(p, 3)...,)
 
     @test @inferred(TupleTools.vcat()) == ()
     @test @inferred(TupleTools.diff(())) == ()
