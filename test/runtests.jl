@@ -86,6 +86,7 @@ using Base: tail, front
     @test @inferred(TupleTools.diff((1, 2, 3))) == (1, 1)
 
     @test TupleTools.sort((2, 1, 3.0)) === (1, 2, 3.0)
+    @test TupleTools.indexin(TupleTools.getindices(t, (1, 2, 3)), t) == (1, 2, 3)
 end
 
 @testset "TupleTools quality assurance with Aqua" begin
