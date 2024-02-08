@@ -382,4 +382,14 @@ diff(v::Tuple{}) = () # similar to diff([])
 diff(v::Tuple{Any}) = ()
 diff(v::Tuple) = (v[2] - v[1], diff(Base.tail(v))...)
 
+"""
+    indexin(a::Tuple, b::Tuple)
+
+Return a tuple containing the first indices in `b` of the elements of `a`. If an element
+of `a` is not in `b`, then the corresponding index will be `nothing`.
+"""
+function indexin(a::Tuple, b::Tuple)
+    return ntuple(i -> findfirst(==(a[i]), b), length(a))
+end
+
 end # module
