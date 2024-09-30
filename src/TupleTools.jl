@@ -3,7 +3,9 @@ Type stable methods for small tuples
 """
 module TupleTools
 
-using Base: tail, front
+# NOTE: do not remove unused imports, they are supposed to be available within the 
+# TupleTools namespace so that they can be used alongside other tuple functions
+using Base: tuple_type_head, tuple_type_tail, tuple_type_cons, setindex, tail, front
 
 """
     struct StaticLength{N} end
