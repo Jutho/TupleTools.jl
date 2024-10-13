@@ -273,10 +273,10 @@ function _split(t::Tuple)
 end
 
 function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
-    if lt(by(first(t1)), by(first(t2))) != rev
-        return (first(t1), _merge(tail(t1), t2, lt, by, rev)...)
-    else
+    if rev ? lt(by(first(t1)), by(first(t2))) : lt(by(first(t2)), by(first(t1)))
         return (first(t2), _merge(t1, tail(t2), lt, by, rev)...)
+    else
+        return (first(t1), _merge(tail(t1), t2, lt, by, rev)...)
     end
 end
 _merge(::Tuple{}, t2::Tuple, lt, by, rev) = t2
