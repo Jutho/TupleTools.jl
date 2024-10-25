@@ -123,8 +123,8 @@ end
 function deleteat(t::Tuple, i::Int)
     return 1 <= i <= length(t) ? _deleteat(t, i) : throw(BoundsError(t, i))
 end
-@inline function _deleteat(t::Tuple, i::Int)
-    return i == 1 ? tail(t) : (t[1], _deleteat(tail(t), i - 1)...)
+function _deleteat(t::NTuple{N}, i::Int) where {N}
+    return ntuple(j -> j < i ? t[j] : t[j + 1], StaticLength(N - 1))
 end
 
 @inline _deleteat(t::Tuple, I::Tuple{Int}) = _deleteat(t, I[1])
@@ -269,7 +269,7 @@ _sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
 function _split(t::Tuple)
     N = length(t)
     M = N >> 1
-    return ntuple(i -> t[i], M), ntuple(i -> t[i + M], N - M)
+    return ntuple(i -> t[i], StaticLength(M)), ntuple(i -> t[i + M], StaticLength(N - M))
 end
 
 function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
@@ -290,8 +290,10 @@ _merge(::Tuple{}, ::Tuple{}, lt, by, rev) = ()
 Computes a tuple that contains the permutation required to sort `t`.
 """
 sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
-function _sortperm(t::Tuple, lt=isless, by=identity, rev::Bool=false)
-    return map(first, _sort(ntuple(n -> (n, by(t[n])), length(t)), lt, last, rev))
+function _sortperm(t::NTuple{N}, lt=isless, by=identity, rev::Bool=false) where {N}
+    indby = ntuple(n -> (n, by(t[n])), StaticLength(N))
+    sortedindby = _sort(indby, lt, last, rev)
+    return ntuple(n -> sortedindby[n][1], StaticLength(N))
 end
 
 """
@@ -333,7 +335,7 @@ end
 A non-allocating alternative to Base.isperm(p) that is much faster for small permutations.
 """
 function isperm(p::NTuple{N,Integer}) where {N}
-    used = MutableNTuple(ntuple(n -> false, Val(N)))
+    used = MutableNTuple(ntuple(n -> false, StaticLength(N)))
     @inbounds for i in p
         if 0 < i <= N && used[i] == false
             used[i] = true
@@ -390,8 +392,8 @@ diff(v::Tuple) = (v[2] - v[1], diff(Base.tail(v))...)
 Return a tuple containing the first indices in `b` of the elements of `a`. If an element
 of `a` is not in `b`, then the corresponding index will be `nothing`.
 """
-function indexin(a::Tuple, b::Tuple)
-    return ntuple(i -> findfirst(==(a[i]), b), length(a))
+function indexin(a::NTuple{N}, b::Tuple) where {N}
+    return ntuple(i -> findfirst(==(a[i]), b), StaticLength(N))
 end
 
 end # module

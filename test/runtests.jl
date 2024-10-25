@@ -3,9 +3,7 @@ using TupleTools
 
 using Base: tail, front
 
-@testset "TupleTools standard tests" begin
-    n = 10
-
+@testset "TupleTools tests with tuple length $n" for n in (5, 10, 15, 25, 50)
     p = randperm(n)
     ip = invperm(p)
 
