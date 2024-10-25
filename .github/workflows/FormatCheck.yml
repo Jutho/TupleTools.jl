@@ -3,11 +3,12 @@ name: FormatCheck
 on:
   push:
     branches:
-      - 'main'
       - 'master'
+      - 'main'
       - 'release-'
     tags: '*'
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
