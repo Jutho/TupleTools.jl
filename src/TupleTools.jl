@@ -257,6 +257,12 @@ findmax(t::Tuple) = Base.findmax(t)
 Sorts the tuple `t`.
 """
 sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+@static if VERSION >= v"1.12.0-"
+    # `Base.sort` only supports homogeneous `NTuple`s, but is more efficient than `_sort`
+    function sort(t::NTuple; lt=isless, by=identity, rev::Bool=false)
+        return Base.sort(t; lt, by, rev)
+    end
+end
 @inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     t1, t2 = _split(t)
     t1s = _sort(t1, lt, by, rev)
@@ -320,13 +326,18 @@ end
 _permute(t::NTuple{N,Any}, p::NTuple{N,Int}) where {N} = getindices(t, p)
 _permute(t::NTuple{N,Any}, p) where {N} = ntuple(n -> t[p[n]], StaticLength(N))
 
-"""
-    circshift(t::NTuple{N,Any}, i::Int) -> ::NTuple{N,Any}
+@static if VERSION >= v"1.12.0-"
+    # `Base.circshift` supports tuples natively as of Julia 1.12
+    const circshift = Base.circshift
+else
+    """
+        circshift(t::NTuple{N,Any}, i::Int) -> ::NTuple{N,Any}
 
-Circularly shift the elements of tuple `t` by `i` positions.
-"""
-function circshift(t::NTuple{N,Any}, i::Int) where {N}
-    return ntuple(n -> t[mod1(n - i, N)], StaticLength(N))
+    Circularly shift the elements of tuple `t` by `i` positions.
+    """
+    function circshift(t::NTuple{N,Any}, i::Int) where {N}
+        return ntuple(n -> t[mod1(n - i, N)], StaticLength(N))
+    end
 end
 
 """
