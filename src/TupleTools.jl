@@ -256,21 +256,26 @@ findmax(t::Tuple) = Base.findmax(t)
 
 Sorts the tuple `t`.
 """
-sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+function sort(t::Tuple; lt::LT=isless, by::B=identity, rev::Bool=false) where {LT,B}
+    return _sort(t, lt, by, rev)
+end
 @static if VERSION >= v"1.12.0-"
     # `Base.sort` only supports homogeneous `NTuple`s, but is more efficient than `_sort`
-    function sort(t::NTuple; lt=isless, by=identity, rev::Bool=false)
+    function sort(t::NTuple; lt::LT=isless, by::B=identity, rev::Bool=false) where {LT,B}
         return Base.sort(t; lt, by, rev)
     end
 end
-@inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
+# `lt` and `by` are only forwarded in `sort`, `_sort` and `sortperm`, so they need explicit
+# type parameters to force specialization (see Jutho/TupleTools.jl#27)
+@inline function _sort(t::Tuple, lt::LT=isless, by::B=identity,
+                       rev::Bool=false) where {LT,B}
     t1, t2 = _split(t)
     t1s = _sort(t1, lt, by, rev)
     t2s = _sort(t2, lt, by, rev)
     return _merge(t1s, t2s, lt, by, rev)
 end
-_sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
-_sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
+_sort(t::Tuple{Any}, lt::LT=isless, by::B=identity, rev::Bool=false) where {LT,B} = t
+_sort(t::Tuple{}, lt::LT=isless, by::B=identity, rev::Bool=false) where {LT,B} = t
 
 function _split(t::Tuple)
     N = length(t)
@@ -278,16 +283,16 @@ function _split(t::Tuple)
     return ntuple(i -> t[i], StaticLength(M)), ntuple(i -> t[i + M], StaticLength(N - M))
 end
 
-function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
+function _merge(t1::Tuple, t2::Tuple, lt::LT, by::B, rev::Bool) where {LT,B}
     if rev ? lt(by(first(t1)), by(first(t2))) : lt(by(first(t2)), by(first(t1)))
         return (first(t2), _merge(t1, tail(t2), lt, by, rev)...)
     else
         return (first(t1), _merge(tail(t1), t2, lt, by, rev)...)
     end
 end
-_merge(::Tuple{}, t2::Tuple, lt, by, rev) = t2
-_merge(t1::Tuple, ::Tuple{}, lt, by, rev) = t1
-_merge(::Tuple{}, ::Tuple{}, lt, by, rev) = ()
+_merge(::Tuple{}, t2::Tuple, lt::LT, by::B, rev::Bool) where {LT,B} = t2
+_merge(t1::Tuple, ::Tuple{}, lt::LT, by::B, rev::Bool) where {LT,B} = t1
+_merge(::Tuple{}, ::Tuple{}, lt::LT, by::B, rev::Bool) where {LT,B} = ()
 
 """
     sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
@@ -295,8 +300,11 @@ _merge(::Tuple{}, ::Tuple{}, lt, by, rev) = ()
 
 Computes a tuple that contains the permutation required to sort `t`.
 """
-sortperm(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sortperm(t, lt, by, rev)
-function _sortperm(t::NTuple{N}, lt=isless, by=identity, rev::Bool=false) where {N}
+function sortperm(t::Tuple; lt::LT=isless, by::B=identity, rev::Bool=false) where {LT,B}
+    return _sortperm(t, lt, by, rev)
+end
+function _sortperm(t::NTuple{N}, lt::LT=isless, by::B=identity,
+                   rev::Bool=false) where {N,LT,B}
     indby = ntuple(n -> (n, by(t[n])), StaticLength(N))
     sortedindby = _sort(indby, lt, last, rev)
     return ntuple(n -> sortedindby[n][1], StaticLength(N))
