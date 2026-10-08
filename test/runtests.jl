@@ -87,6 +87,50 @@ using Base: tail, front
     @test TupleTools.indexin(TupleTools.getindices(t, (1, 2, 3)), t) == (1, 2, 3)
 end
 
+@testset "sort and sortperm with keyword arguments" begin
+    for n in (0, 1, 2, 5, 10, 16), T in (Int, Float64)
+        t = ntuple(_ -> T(rand(-3:3)), n) # many ties to check stability
+        v = collect(t)
+        for lt in (isless, >), by in (identity, abs), rev in (false, true)
+            @test @inferred(TupleTools.sort(t; lt, by, rev)) ==
+                  (sort(v; lt, by, rev)...,)
+            @test @inferred(TupleTools.sortperm(t; lt, by, rev)) ==
+                  (sortperm(v; lt, by, rev)...,)
+        end
+    end
+end
+
+# sum over many runtime inputs: the allocations of #27 only show up in such a loop
+# (`by::B` forces specialization of the test functions themselves)
+function _sort_loop(v, by::B, rev) where {B}
+    acc = 0.0
+    for t in v
+        acc += first(TupleTools.sort(t; by, rev))
+    end
+    return acc
+end
+function _sortperm_loop(v, by::B, rev) where {B}
+    acc = 0
+    for t in v
+        acc += first(TupleTools.sortperm(t; by, rev))
+    end
+    return acc
+end
+@testset "sort and sortperm do not allocate" begin
+    for n in (4, 8, 10, 12, 16), T in (Int, Float64), by in (identity, abs),
+        rev in (false, true)
+
+        v = [ntuple(_ -> rand(T), n) for _ in 1:10]
+        _sortperm_loop(v, by, rev)
+        @test @allocated(_sortperm_loop(v, by, rev)) == 0
+        # from Julia 1.12 on, `sort(::NTuple)` is forwarded to `Base.sort`
+        if VERSION < v"1.12.0-"
+            _sort_loop(v, by, rev)
+            @test @allocated(_sort_loop(v, by, rev)) == 0
+        end
+    end
+end
+
 @testset "TupleTools quality assurance with Aqua" begin
     using Aqua
     Aqua.test_all(TupleTools;
