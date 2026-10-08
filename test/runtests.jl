@@ -116,17 +116,19 @@ function _sortperm_loop(v, by::B, rev) where {B}
     end
     return acc
 end
+# measure inside a function, so that boxing the return value is not counted
+function _allocs(f::F, v, by::B, rev) where {F,B}
+    f(v, by, rev)
+    return @allocated f(v, by, rev)
+end
 @testset "sort and sortperm do not allocate" begin
     for n in (4, 8, 10, 12, 16), T in (Int, Float64), by in (identity, abs),
         rev in (false, true)
-
         v = [ntuple(_ -> rand(T), n) for _ in 1:10]
-        _sortperm_loop(v, by, rev)
-        @test @allocated(_sortperm_loop(v, by, rev)) == 0
+        @test _allocs(_sortperm_loop, v, by, rev) == 0
         # from Julia 1.12 on, `sort(::NTuple)` is forwarded to `Base.sort`
         if VERSION < v"1.12.0-"
-            _sort_loop(v, by, rev)
-            @test @allocated(_sort_loop(v, by, rev)) == 0
+            @test _allocs(_sort_loop, v, by, rev) == 0
         end
     end
 end
